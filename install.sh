@@ -1,9 +1,23 @@
 #!/usr/bin/env bash
-BASH_IT="$HOME/.bash_it"
 
 test -w $HOME/.bash_profile &&
   cp $HOME/.bash_profile $HOME/.bash_profile.bak &&
   echo "Your original .bash_profile has been backed up to .bash_profile.bak"
+
+# F.2012-12-18
+# ~/.bash_it symlink to "here" :
+BASH_IT=$(cd `dirname "$0"` && pwd)
+BASH_IT=${BASH_IT##$HOME/}
+
+echo "Symlinking \`$BASH_IT' to \`$HOME' :"
+ln -sfnv "$BASH_IT" ~/.bash_it
+BASH_IT="$HOME/.bash_it"
+
+echo "Your original .bash_profile has been backed up to .bash_profile.bak"
+if [ ! -e "$BASH_IT/bash_it.sh" ]; then
+    echo "Could not find bash_it.sh at \`$BASH_IT', exiting.."
+    exit
+fi
 
 cp $HOME/.bash_it/template/bash_profile.template.bash $HOME/.bash_profile
 
