@@ -38,6 +38,7 @@ alias g='git'
 #alias gcl='g clone'
 
 alias ga='g add'
+alias gau='ga -u'
 #alias gall='g add .'
 alias gb='g branch'
 #alias gba='g branch -a'
@@ -81,6 +82,11 @@ alias glhf='gl HEAD..FETCH_HEAD'
 
 alias gmt='g mergetool'
 
+alias gp='git push'
+alias gpo='git push origin'
+#alias gl='git pull'
+#alias gup='git fetch && git rebase'
+
 alias gr='g remote'
 alias gru='g remote update'
 
@@ -100,10 +106,6 @@ alias gt='g tag'
 
 #alias get='git'
 #alias gst='git status'
-#alias gl='git pull'
-#alias gup='git fetch && git rebase'
-#alias gp='git push'
-#alias gpo='git push origin'
 #alias gexport='git archive --format zip --output'
 #alias gdel='git branch -D'
 #alias gmu='git fetch origin -v; git fetch upstream -v; git merge upstream/master'
