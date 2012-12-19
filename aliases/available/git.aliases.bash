@@ -71,22 +71,6 @@ alias gdv='git diff -w "$@" | vim -R -'
 #alias gw="git whatchanged"
 alias gw="g whatchanged"
 
-if [ -z "$EDITOR" ]; then
-    case $OSTYPE in
-      linux*)
-        alias gd='git diff | vim -R -'
-        ;;
-      darwin*)
-        alias gd='git diff | mate'
-        ;;
-      *)
-        alias gd='git diff'
-        ;;
-    esac
-else
-    alias gd="git diff | $EDITOR"
-fi
-
 alias gcf='g cat-file'
 alias gls='g ls-files'
 
@@ -124,3 +108,18 @@ alias gt='g tag'
 #alias gdel='git branch -D'
 #alias gmu='git fetch origin -v; git fetch upstream -v; git merge upstream/master'
 
+#if [ -z "$EDITOR" ]; then
+#    case $OSTYPE in
+#      linux*)
+#        alias gd='git diff | vim -R -'
+#        ;;
+#      darwin*)
+#        alias gd='git diff | mate'
+#        ;;
+#      *)
+#        alias gd='git diff'
+#        ;;
+#    esac
+#else
+#    alias gd="git diff | $EDITOR"
+#fi
