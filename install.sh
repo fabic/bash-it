@@ -25,7 +25,7 @@ if [ ! -e "$BASH_IT/dot_bash_profile" ]; then
 fi
 
 echo "Symlinking \`$BASH_IT/dot_bash_profile' to \`$HOME' :"
-ln -sfv --backup=numbered "$BASH_IT/dot_bash_profile" "$HOME"
+ln -sfv --backup=numbered "$HOME/.bash_it/dot_bash_profile" "$HOME/.bash_profile"
 
 while true
 do
