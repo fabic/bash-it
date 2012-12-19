@@ -13,15 +13,19 @@ echo "Symlinking \`$BASH_IT' to \`$HOME' :"
 ln -sfnv "$BASH_IT" ~/.bash_it
 BASH_IT="$HOME/.bash_it"
 
-echo "Your original .bash_profile has been backed up to .bash_profile.bak"
 if [ ! -e "$BASH_IT/bash_it.sh" ]; then
     echo "Could not find bash_it.sh at \`$BASH_IT', exiting.."
     exit
 fi
 
-cp $HOME/.bash_it/template/bash_profile.template.bash $HOME/.bash_profile
+# F.2012-12-19 Wed.
+if [ ! -e "$BASH_IT/dot_bash_profile" ]; then
+    cp "$BASH_IT/template/bash_profile.template.bash" "$BASH_IT/dot_bash_profile"
+    echo "Copied the template .bash_profile as dot_bash_profile, edit this file to customize bash-it"
+fi
 
-echo "Copied the template .bash_profile into ~/.bash_profile, edit this file to customize bash-it"
+echo "Symlinking \`$BASH_IT/dot_bash_profile' to \`$HOME' :"
+ln -sfv --backup=numbered "$BASH_IT/dot_bash_profile" "$HOME"
 
 while true
 do
