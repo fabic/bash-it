@@ -70,9 +70,7 @@ export LANG=en_US.UTF-8
 #export PATH=$PATH:~/.gem/ruby/1.8/bin:/opt/nginx/sbin
 
 # Path to the bash it configuration
-# TODO: Or have it (~/.bash_it) be a symlink to where it actually resides?
-#export BASH_IT="$HOME/.bash-it"
-export BASH_IT="$HOME/dev/bash-it"
+export BASH_IT="$HOME/.bash_it"
 
 # Lock and Load a custom theme file
 # location /.bash_it/themes/
