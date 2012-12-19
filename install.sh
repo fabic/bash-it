@@ -34,7 +34,7 @@ do
   case $RESP
     in
     [yY])
-      cp $HOME/.bash_it/template/jekyllconfig.template.bash $HOME/.jekyllconfig
+      cp --backup=numbered $BASH_IT/template/jekyllconfig.template.bash $HOME/.jekyllconfig
       echo "Copied the template .jekyllconfig into your home directory. Edit this file to customize bash-it for using the Jekyll plugins"
       break
       ;;
