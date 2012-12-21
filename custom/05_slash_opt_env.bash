@@ -10,7 +10,8 @@ PREFIX=/opt
 [ -d "$PREFIX/bin" ] && pathprepend "$PREFIX/bin"
 
 # When building several PHP versions, which one to use :
-PHP_VERSION=-5.3.17
+#PHP_VERSION=-5.3.17
+PHP_VERSION=-5.4.9
 
 # Array of things that get installed in their own prefixes, such as
 # when doing ./configure --prefix=/opt/thing-1.2.3
