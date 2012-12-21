@@ -95,6 +95,8 @@ alias gss='gs -s'
 alias gsu='gs -uno'
 alias gs.='gs .'
 
+alias gm='g submodule'
+
 # TODO: alias or function for gsb HEAD with the remote, e.g. would be equiv. to e.g.:
 #       gsb master origin/master
 #       gsb live origin/live
