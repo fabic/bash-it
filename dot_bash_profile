@@ -108,6 +108,9 @@ export TODO="t"
 # Load Bash It
 source $BASH_IT/bash_it.sh
 
+# For custom/05_slash_opt_env.bash
+SlashOptSubdirs=(  )
+
 # F.2010-08-16 : Additional binary paths.
 [ -d ~/bin       ] && pathprepend ~/bin
 [ -d ~/tools/bin ] && pathprepend ~/tools/bin
