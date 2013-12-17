@@ -15,16 +15,21 @@ PHP_VERSION=-5.4.9
 
 # Array of things that get installed in their own prefixes, such as
 # when doing ./configure --prefix=/opt/thing-1.2.3
-SUBDIRS=( mercurial html_tidy apache php$PHP_VERSION git vim )
+#SlashOptSubdirs=( mercurial html_tidy apache php$PHP_VERSION git vim )
+
+# If not defined... :
+if [ ! -v SlashOptSubdirs ]; then
+	declare -a SlashOptSubdirs
+fi
 
 # For each "sub-prefix", search for bin/, lib/, lib64/, man/,
 # share/man/, share/info/ and update the related environment variables.
-for subdir in "${SUBDIRS[@]}"; do
+for subdir in "${SlashOptSubdirs[@]}"; do
 
     dir="$PREFIX/$subdir"
 
     if [ ! -e "$dir" ]; then
-        echo "$0 : Warning: \`$dir' prefix not found."
+        echo "$BASH_SOURCE : Warning: \`$dir' prefix not found."
         continue
     fi
 
