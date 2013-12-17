@@ -10,3 +10,9 @@ alias papache='( httpd_pids=`pgrep -u $USER,apache,root httpd` ; [ ! "$httpd_pid
 alias sls='screen -ls'
 alias sr='screen -r'
 alias sR='screen -R'
+
+# Sublime Text
+alias st='sublime_text'
+alias sta='st -a'
+alias stn='st -n'
+alias stw='st -w'
