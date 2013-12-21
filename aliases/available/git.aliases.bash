@@ -5,7 +5,9 @@ about-alias 'common git abbreviations'
 alias g='git'
 alias gcl='g clone'
 alias ga='g add'
-alias gau='ga -u'
+alias gai='ga --interactive'
+alias gap='ga --patch'
+alias gau='ga --update'
 #alias gall='git add .'
 #alias gus='git reset HEAD'
 #alias gm="git merge"
@@ -63,6 +65,7 @@ alias gmt='g mergetool'
 alias gr='g remote'
 alias gru='gr update'
 alias grv='gr -v'
+alias glsr='g ls-remote'
 
 # TODO: alias or function for gsb HEAD with the remote, e.g. would be equiv. to e.g.:
 #       gsb master origin/master
