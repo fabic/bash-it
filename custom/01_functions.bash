@@ -35,3 +35,18 @@ vin() {
         vim "$@" &&
     popd
 }
+
+proxy_unset() {
+    #local -a varlist=( HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY NO_PROXY )
+    local -a varlist=( $(env | grep -io '^.\+_proxy=') )
+    local var
+    varlist=${varlist[*]%=}
+    for var in ${varlist[*]}; do
+        #echo $var ${!var}
+        #continue
+        if [ -v $var ]; then
+            echo "unset $var (${!var})"
+            unset -v $var
+        fi
+    done
+}
