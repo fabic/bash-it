@@ -36,6 +36,26 @@ vin() {
     popd
 }
 
+# Fcj.2014-03-04
+function vimdiff_cycle()
+{
+        local filename=""
+        local prev=""
+        for filename in "$@";
+        do
+                if [ "x$prev" = "x" ]; then 
+                        prev="$filename"
+                        continue
+                fi
+
+                read -p "--- About to DIFF. $prev AGAINST $filename ; press any key to continue, or Ctrl-C to abort. ---"
+
+                vimdiff "$prev" "$filename"
+
+                prev="$filename"
+        done
+}
+
 proxy_unset() {
     #local -a varlist=( HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY NO_PROXY )
     local -a varlist=( $(env | grep -io '^.\+_proxy=') )
