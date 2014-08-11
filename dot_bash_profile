@@ -117,6 +117,7 @@ source $BASH_IT/bash_it.sh
 # F.2010-08-16 : Additional binary paths.
 [ -d ~/bin       ] && pathprepend ~/bin
 [ -d ~/tools/bin ] && pathprepend ~/tools/bin
+[ -d ~/.gem/ruby/1.9.1/bin ] && pathprepend ~/.gem/ruby/1.9.1/bin
 
 # Print out some environment variables :
 echo "Your environment, some of it :"
