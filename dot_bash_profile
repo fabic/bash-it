@@ -105,11 +105,14 @@ export TODO="t"
 # https://github.com/xvzf/vcprompt
 #export VCPROMPT_EXECUTABLE=~/.vcprompt/bin/vcprompt
 
+# For custom/05_slash_opt_env.bash
+#SlashOptSubdirs=(  )
+#SlashOptSubdirs=( mercurial html_tidy apache php$PHP_VERSION git vim )
+#export SlashOptSubdirs=( php-5.3.23 )
+export SlashOptSubdirs=( php )
+
 # Load Bash It
 source $BASH_IT/bash_it.sh
-
-# For custom/05_slash_opt_env.bash
-SlashOptSubdirs=(  )
 
 # F.2010-08-16 : Additional binary paths.
 [ -d ~/bin       ] && pathprepend ~/bin

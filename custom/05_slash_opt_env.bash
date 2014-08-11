@@ -11,7 +11,8 @@ PREFIX=/opt
 
 # When building several PHP versions, which one to use :
 #PHP_VERSION=-5.3.17
-PHP_VERSION=-5.4.9
+#PHP_VERSION=-5.4.9
+#PHP_VERSION=-5.3.23
 
 # Array of things that get installed in their own prefixes, such as
 # when doing ./configure --prefix=/opt/thing-1.2.3
@@ -19,6 +20,7 @@ PHP_VERSION=-5.4.9
 
 # If not defined... :
 if [ ! -v SlashOptSubdirs ]; then
+	echo SlashOptSubdirs is not defined.
 	declare -a SlashOptSubdirs
 fi
 
