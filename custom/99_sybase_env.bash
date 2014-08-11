@@ -9,6 +9,9 @@ export SYBASE_OCS=OCS-15_0
 # Hummm what was that thing about ?
 #export SYBPLATFORM=linux
 
+# Default Server alias :
+export DSQUERY=SYBTEST
+
 # PATH
 [ -d "$SYBASE/$SYBASE_OCS/bin" ] && pathprepend "$SYBASE/$SYBASE_OCS/bin"
 
