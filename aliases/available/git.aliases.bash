@@ -2,66 +2,101 @@ cite 'about-alias'
 about-alias 'common git abbreviations'
 
 # Aliases
-alias gcl='git clone'
-alias ga='git add'
-alias gall='git add .'
-alias gus='git reset HEAD'
-alias gm="git merge"
 alias g='git'
-alias get='git'
-alias gst='git status'
-alias gs='git status'
-alias gss='git status -s'
-alias gl='git pull'
-alias gpr='git pull --rebase'
-alias gpp='git pull && git push'
-alias gup='git fetch && git rebase'
-alias gp='git push'
-alias gpo='git push origin'
-alias gdv='git diff -w "$@" | vim -R -'
-alias gc='git commit -v'
-alias gca='git commit -v -a'
-alias gcm='git commit -v -m'
-alias gci='git commit --interactive'
-alias gb='git branch'
-alias gba='git branch -a'
-alias gcount='git shortlog -sn'
-alias gcp='git cherry-pick'
-alias gco='git checkout'
-alias gexport='git archive --format zip --output'
-alias gdel='git branch -D'
-alias gmu='git fetch origin -v; git fetch upstream -v; git merge upstream/master'
-alias gll='git log --graph --pretty=oneline --abbrev-commit'
+alias gcl='g clone'
+alias ga='g add'
+alias gai='ga --interactive'
+alias gap='ga --patch'
+alias gau='ga --update'
+#alias gall='git add .'
+#alias gus='git reset HEAD'
+#alias gm="git merge"
+#alias get='git'
+#alias gst='git status'
+alias gs='g status'
+alias gss='gs -s'
+alias gsu='gs -uno'
+alias gs.='gs .'
+#alias gl='git pull'
+alias gpr='g pull --rebase'
+alias gpp='g pull && git push'
+alias gup='g fetch && git rebase'
+alias gp='g push'
+alias gpo='gp origin'
+alias gpfo='gp -f origin'
+alias gdv='g diff -w "$@" | vim -R -'
+
+alias gc='g commit -v'
+alias gca='gc -a'
+alias gci='g commit --interactive'
+#alias gcm='gc -v -m'
+alias gcm='gc --amend'
+
+alias gb='g branch'
+alias gba='gb -a'
+alias gbv='gb -v'
+# Remote tracking branch :
+alias gbr='g rev-parse --abbrev-ref --symbolic-full-name @{u}'
+
+
+alias gco='g checkout'
+alias gcp='g cherry-pick'
+#alias gexport='git archive --format zip --output'
+#alias gdel='git branch -D'
+alias gmu='g fetch origin -v; g fetch upstream -v; g merge upstream/master'
+
+alias gd='g diff --patience'
+alias gdc='gd --cached'
+alias gdhf='gd HEAD..FETCH_HEAD'
+alias gdmh='gd MERGE_HEAD..'
+alias gdhm='gd ..MERGE_HEAD'
+
+alias gl='g log --graph --stat --summary --decorate --source --abbrev-commit'
+alias gll='g log --graph --pretty=oneline --abbrev-commit'
+alias gl1='g log --oneline --graph --decorate --source'
+alias glhf='gl HEAD..FETCH_HEAD'
 alias gg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative"
 alias ggs="gg --stat"
-alias gsl="git shortlog -sn"
-alias gw="git whatchanged"
-alias gt="git tag"
-alias gta="git tag -a"
-alias gtd="git tag -d"
-alias gtl="git tag -l"
+alias gsl="g shortlog -sn"
+alias gw="g whatchanged"
+alias gcount='g shortlog -sn'
 
-case $OSTYPE in
-  darwin*)
-    alias gtls="git tag -l | gsort -V"
-    ;;
-  *)
-    alias gtls='git tag -l | sort -V'
-    ;;
-esac
+alias gcf='g cat-file -p'
+alias gls='g ls-files'
 
-if [ -z "$EDITOR" ]; then
-    case $OSTYPE in
-      linux*)
-        alias gd='git diff | vim -R -'
-        ;;
-      darwin*)
-        alias gd='git diff | mate'
-        ;;
-      *)
-        alias gd='git diff'
-        ;;
-    esac
-else
-    alias gd="git diff | $EDITOR"
-fi
+alias gm='g submodule'
+
+alias gmt='g mergetool'
+
+alias gr='g remote'
+alias gru='gr update'
+alias grv='gr -v'
+alias glsr='g ls-remote'
+
+# TODO: alias or function for gsb HEAD with the remote, e.g. would be equiv. to e.g.:
+#       gsb master origin/master
+#       gsb live origin/live
+#       gsb HEAD master ?
+alias gsb='g show-branch'
+alias gsbh='gsb --current'
+alias gsbr='gsbh `gbr`'
+alias gsh='g show'
+alias gt='g tag'
+
+alias gst='g stash'
+
+#if [ -z "$EDITOR" ]; then
+#    case $OSTYPE in
+#      linux*)
+#        alias gd='git diff | vim -R -'
+#        ;;
+#      darwin*)
+#        alias gd='git diff | mate'
+#        ;;
+#      *)
+#        alias gd='git diff'
+#        ;;
+#    esac
+#else
+#    alias gd="git diff | $EDITOR"
+#fi
