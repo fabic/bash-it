@@ -3,6 +3,9 @@
 # See /opt/sybase/SYBASE.sh
 #
 
+return
+# F.2014-08-12 : I'm making these stuff system-wide! See /etc/env.d/
+
 export SYBASE=/opt/sybase
 export SYBASE_OCS=OCS-15_0
 

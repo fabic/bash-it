@@ -73,6 +73,8 @@ alias gru='gr update'
 alias grv='gr -v'
 alias glsr='g ls-remote'
 
+alias grst='g reset'
+
 # TODO: alias or function for gsb HEAD with the remote, e.g. would be equiv. to e.g.:
 #       gsb master origin/master
 #       gsb live origin/live

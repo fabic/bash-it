@@ -35,6 +35,10 @@ export LANG=en_US.UTF-8
 #export HISTSIZE=1024
 #export HISTFILESIZE=4096
 
+# F.2014-08-18 : temp. here (shall I set this in ~/.xinit ot xsession ?
+#export SSH_ASKPASS=/usr/lib64/seahorse/seahorse-ssh-askpass
+export SSH_ASKPASS=~/bin/seahorse_wrapper.sh
+
 # TODO: Personal custom stuff ?
 # F.2011-08-16 : Source additional things.
 #
@@ -85,6 +89,9 @@ export GIT_HOSTING='git@github.com:Oeil-de-nuit'
 # Set my editor and git editor
 #export EDITOR="/usr/bin/mate -w"
 #export GIT_EDITOR='/usr/bin/mate -w'
+
+# FC.2014-11-04 : Maven HOME, for IntelliJ IDEA.
+export M2_HOME=/usr/share/maven-bin-3.0
 
 # Set the path nginx
 export NGINX_PATH='/opt/nginx'
