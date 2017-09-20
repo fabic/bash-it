@@ -10,3 +10,16 @@
 [submodule "test_lib/bats-file"]
 	path = test_lib/bats-file
 	url = https://github.com/ztombol/bats-file
+
+[submodule "fabic-st3-prefs"]
+	path = fabic/dot_config_sublime-text-3
+	url = git@github.com:fabic/my-sublime-text-prefs.git
+[submodule "spf-vim"]
+	path = fabic/spf13-vim
+	url = git@github.com:fabic/spf13-vim.git
+[submodule "powerline-fonts"]
+	path = fabic/powerline-fonts
+	url = git@github.com:powerline/fonts.git
+[submodule "fabic-dude-vim"]
+	path = fabic/dude.vim
+	url = git@github.com:fabic/dude.vim.git

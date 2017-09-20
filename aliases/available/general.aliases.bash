@@ -11,10 +11,29 @@ fi
 
 # List directory contents
 alias sl=ls
-alias la='ls -AF'       # Compact view, show hidden
-alias ll='ls -al'
-alias l='ls -a'
-alias l1='ls -1'
+
+# FABIC: upstream 2017-01-30
+#alias la='ls -AF'       # Compact view, show hidden
+#alias ll='ls -al'
+#alias l='ls -a'
+#alias l1='ls -1'
+
+# FABIC: ^ my changes...
+alias ls='ls -G'        # Compact view, show colors
+alias ll='ls -lF'
+alias la='ll -a'       # Compact view, show hidden
+alias l='ls -F'
+alias l1='l -1sh'
+alias lh='ll -h'
+alias latr='la -tr'
+
+alias cdp='cd -P'
+alias cpi='cp -i'
+
+# du "star" & sort
+alias dus='du -hsc * | sort -h'
+
+alias dateiso="date '+%Y-%m-%d_%H%M%S'"
 
 alias _="sudo"
 

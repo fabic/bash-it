@@ -1,0 +1,293 @@
+#
+# ~/.bashrc
+#
+# FABIC / Bash-it customization.
+#
+
+# Test for an interactive shell.  There is no need to set anything
+# past this point for scp and rcp, and it's important to refrain from
+# outputting anything in those cases.
+if [[ $- != *i* ]] ; then
+	# Shell is non-interactive.  Be done now!
+	return
+fi
+
+
+#
+# Auto-Screen ?
+#
+# FABIC/2012-11-03
+# See http://geekscrap.com/2010/02/using-screen-as-your-login-shell/
+#
+if false && [ "x`which screen 2> /dev/null`" != "x" -a ${SHLVL} -eq 1 ];
+then
+    ((SHLVL+=1)); export SHLVL
+    #exec screen -R -e "^Ee" ${SHELL} -l
+    screen -R -e "^Ee" ${SHELL} -l
+    ((SHLVL-=1)); export SHLVL
+    echo
+    echo "///////////////////////////////////////////////////////"
+    echo "~/.bash_profile: End of screen-itized session, SHLVL=$SHLVL"
+    echo "///////////////////////////////////////////////////////"
+    echo
+fi
+
+
+# Find out if we have any tmux detached session and automatically re-attach
+# (note that this test of nested bash processes is _not_ totally correct,
+#  but works well in practice).
+if true && [[ $SHLVL == 1 ]]; then
+    # TMUX !
+    if type -P tmux > /dev/null && tmux has-session 2> /dev/null ; then
+        if tmux attach ; then
+            echo
+            echo "# ${BASH_SOURCE[0]} : tmux attached terminated, ok."
+            echo
+        else
+            echo
+            echo "# ${BASH_SOURCE[0]} : WARNING: tmux attached terminated with non-zero exit status -_- (nevermind)"
+            echo
+        fi
+    fi
+    # SCREEN ?
+    if type -P screen > /dev/null && [[ ! -z "$(screen -ls | grep '^\s*[0-9]*\.\S\+\s\+(Detached)\s*$')" ]]; then
+        if screen -r ; then
+            echo
+            echo "# ${BASH_SOURCE[0]} : “screen -r” terminated, ok."
+            echo
+        else
+            echo
+            echo "# ${BASH_SOURCE[0]} : WARNING: “screen -r” terminated with non-zero exit status -_- (nevermind)"
+            echo
+        fi
+    fi
+fi
+
+
+# Source the system-wide bashrc.
+#  > CentOS
+if [ -f /etc/bashrc ]; then
+	. /etc/bashrc
+#  > Gentoo / Sabayon
+elif [ -f /etc/bash/bashrc ]; then
+	. /etc/bash/bashrc
+#  > Arch Linux
+elif [ -f /etc/bash.bashrc ]; then
+	. /etc/bash.bashrc
+fi
+
+
+# FABIC/2011-08-16
+export LANG=en_US.UTF-8
+
+
+# FABIC/2015-12-03
+# For Ctrl-S forward search ability (the converse of Ctrl-R) we're disabling
+# the “stop scrolling terminal ctrl thing / signal”
+stty stop ""
+
+# check the window size after each command and, if necessary,
+# update the values of LINES and COLUMNS.
+shopt -s checkwinsize
+
+# If set, the pattern "**" used in a pathname expansion context will
+# match all files and zero or more directories and subdirectories.
+shopt -s globstar
+
+# make less more friendly for non-text input files, see lesspipe(1)
+[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+
+
+# FABIC/2015-12-03
+# Replace current bash process with a new one, needed here in .bashrc
+# so that I can quickly "boot" a new shell with Bash-it initialized.
+alias ebl='exec bash -l'
+
+# FABIC: New root shell (and replace current process).
+alias esu='exec sudo su -'
+
+# FABIC: Setting umask here so that g+w for Rsync/Scp.
+umask 0002
+
+
+#export GIT_EDITOR='/usr/bin/mate -w'
+export EDITOR="vim"
+
+# FABIC/2014-11-04 : Maven HOME, Java stuff.
+#export M2_HOME=/usr/share/maven-bin-3.0
+
+# Path to the bash it configuration
+if [ -d ~/.bash_it ]; then
+    export BASH_IT="$HOME/.bash_it"
+elif [ -d "$HOME/dev/bash-it" ]; then
+    export BASH_IT="$HOME/dev/bash-it"
+fi
+
+# Lock and Load a custom theme file
+# location /.bash_it/themes/
+export BASH_IT_THEME='fabi'
+
+# (Advanced): Change this to the name of your remote repo if you
+# cloned bash-it with a remote other than origin such as `bash-it`.
+# export BASH_IT_REMOTE='bash-it'
+
+# Your place for hosting Git repos. I use this for private repos.
+export GIT_HOSTING='git@github.com:fabic'
+
+# Don't check mail when opening terminal.
+unset MAILCHECK
+
+# Change this to your console based IRC client of choice.
+export IRC_CLIENT='irssi'
+
+# Set this to the command you use for todo.txt-cli
+export TODO="t"
+
+# Set this to false to turn off version control status checking within the prompt for all themes
+export SCM_CHECK=true
+
+# Set Xterm/screen/Tmux title with only a short hostname.
+# Uncomment this (or set SHORT_HOSTNAME to something else),
+# Will otherwise fall back on $HOSTNAME.
+export SHORT_HOSTNAME=$(hostname -s)
+
+# Set vcprompt executable path for scm advance info in prompt (demula theme)
+# https://github.com/djl/vcprompt
+#export VCPROMPT_EXECUTABLE=~/.vcprompt/bin/vcprompt
+
+# (Advanced): Uncomment this to make Bash-it reload itself automatically
+# after enabling or disabling aliases, plugins, and completions.
+# export BASH_IT_AUTOMATIC_RELOAD_AFTER_CONFIG_CHANGE=1
+
+
+# FABIC: For custom/05_slash_opt_env.bash, list of sub-directories
+# there that follow the FHS-like layout (bin, etc, share/man, lib)
+#SlashOptSubdirs=(  )
+#SlashOptSubdirs=( mercurial html_tidy apache php$PHP_VERSION git vim )
+
+
+## # # # # # # # # # # # # # #
+# Load Bash It
+## # # # # # # # # # # # # # #
+source $BASH_IT/bash_it.sh
+
+
+# FABIC: gVim forks a shell in a 'dumb' terminal that do not comprehend colors.
+if [ "$TERM" == "dumb" ]; then
+  echo "# FYI: dumb terminal detected (\$TERM='$TERM') => adjusting prompt (w/o colors)."
+  PS1="(\t) [\u@\H] \j \w $ "
+  PS2=''
+  PS4='+ '
+fi
+
+
+
+# Further aliases may be defined per home@host.
+if [ -f ~/.bash_aliases ]; then
+    . ~/.bash_aliases
+fi
+
+# FABIC/2014-08-18 : temp. here (shall I set this in ~/.xinit ot xsession ?
+#export SSH_ASKPASS=/usr/lib64/seahorse/seahorse-ssh-askpass
+if false && [ -x ~/bin/seahorse_wrapper.sh -a -z "$SSH_ASKPASS" ]; then
+    export SSH_ASKPASS=~/bin/seahorse_wrapper.sh
+fi
+# FIXME:^ move that script under ur custom/ dir. ? or have a dedicated bin/ ?
+
+if [ -z "$DISPLAY" ] && [ ! -z "$SSH_CONNECTION" ];
+then
+    export DISPLAY="${SSH_CONNECTION%% *}:0"
+    echo
+    echo "# WARN: Dude! \$DISPLAY is not set, and it happens that you're doing"
+    echo "#       SSH here, so we are inferring \$DISPLAY='$DISPLAY'"
+    echo "#       in the unlikely case you would like to forward back some X11..."
+    echo "#       (like issuing \`xhost +\` from whence you came, if u care not)"
+    echo
+fi
+
+# FABIC: Ruby gems bin dir.
+if [ -d ~/.gem/ruby/ ] && [ -d "$(ls -1d ~/.gem/ruby/*/bin | sort -r | head -n1)" ];
+then
+  pathprepend "$(ls -1d ~/.gem/ruby/*/bin | sort -r | head -n1)"
+fi
+
+# FABIC/2011-08-16 : Source additional shell scripts that I do not include
+#                    in my Bash-it repo. (ex. per machine scripts)...
+if [ -d ~/.bashrc.d/ ]; then
+  for script in $(find ~/.bashrc.d/ -name \*.sh -o -name \*.bash); do
+    echo "# Sourcing shell script '$script'"
+    [ -r "$script" ] && source "$script"
+  done
+fi
+
+
+# PHP / Composer.phar "globally" installed stuff, e.g.
+#   `` composer.phar global require fabpot/php-cs-fixer `` :
+[ -d ~/.composer/vendor/bin ] && pathprepend ~/.composer/vendor/bin
+
+
+# FABIC/2011-08-16 : Prompt color, slightly modified from BLFS.
+# Setup a red prompt for root and a green one for users.
+# Gentoo's PS1 : \[\033[01;32m\]\u@\h\[\033[01;34m\] \w \$\[\033[00m\]
+if false; then
+  NORMAL="\[\e[0m\]"
+  RED="\[\e[1;31m\]"
+  GREEN="\[\e[1;32m\]"
+  CYAN="\[\e[1;36m\]"
+  YELLOW="\[\e[33;1m\]"
+  WHITE="\[\e[37;1m\]"
+  if [[ $EUID == 0 ]] ; then
+      USERATHOST=$RED
+  else
+      USERATHOST=$GREEN
+  fi
+  PS1="$USERATHOST\u@\h $YELLOW\j $WHITE\w $USERATHOST\\$ $NORMAL"
+  PS2="$USERATHOST> $NORMAL"
+fi
+
+
+# FABIC: Start an SSH Agent... (is this fine ?)
+# @link http://unix.stackexchange.com/a/90869
+if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ] ; then
+    echo "# FYI: Dude, starting ssh-agent from your .bash_profile"
+    echo "# BTW: (this may not be what you want (!)"
+    eval `ssh-agent -s`
+    #ssh-add
+    echo
+fi
+
+# MacPorts installs its stuff there.
+[ -d /opt/local/bin ]  && pathprepend /opt/local/bin
+[ -d /opt/local/sbin ] && pathprepend /opt/local/sbin
+
+# Max OS X : Liip's PHP. MySQL.
+[ -d /usr/local/php5/bin ]  && pathprepend /usr/local/php5/bin
+[ -d /usr/local/mysql/bin ] && pathprepend /usr/local/mysql/bin
+
+# FABIC.2010-08-16 : Additional binary paths.
+[ -d ~/local/bin ]  && pathprepend ~/local/bin
+[ -d ~/.local/bin ] && pathprepend ~/.local/bin
+
+# FABIC.2017-08-29 : Node.js pre-compiled binaries from https://nodejs.org/
+nodejs_local_binary_dist="$(ls -1d ~/.local/node-v*-linux-* | sort -V | tail -n1)"
+if [ -x "$nodejs_local_binary_dist/bin/node" ]; then
+  pathprepend "$nodejs_local_binary_dist/bin" PATH
+  pathprepend "$nodejs_local_binary_dist/include" INCLUDE
+  pathprepend "$nodejs_local_binary_dist/share/man" MANPATH
+fi
+unset nodejs_local_binary_dist
+
+# ~/bin shall come last so that I can override about anything :
+[ -d ~/bin ] && pathprepend ~/bin
+
+
+# F.2012-10-31 : List of screens.
+#screen -ls
+
+
+# FABIC: Print out some environment variables :
+echo "Your environment, some of it :"
+for e in DISPLAY LANG LD_LIBRARY_PATH PATH SSH_CONNECTION ;
+do
+    echo "   $e = ${!e}"
+done

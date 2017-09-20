@@ -17,3 +17,10 @@ case $OSTYPE in
     [[ -n $GVIM ]] && function gvimt { command gvim --remote-tab-silent "$@" || command gvim "$@"; }
     ;;
 esac
+
+# FabiC.2015-06-01
+alias vd='vimdiff'
+#alias vi='vim'
+alias viN='vim -u NONE'
+alias vp='vimpager'
+
