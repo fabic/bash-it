@@ -17,6 +17,10 @@ fi
 srcdir="$1"
 dstdir="$2"
 
+# Remove eventual leading slash (sugar).
+srcdir="${srcdir%/}"
+dstdir="${dstdir%/}"
+
 if [ ! -d "$srcdir" ]; then
     echo "ERROR: Source directory '$srcdir' does not exist (or whatever alike)."
     exit 2
@@ -49,7 +53,9 @@ fi
 #                -print0)
 
     ( while read -r _perms _hlinks _user _group _size _date _time fil ; do
-          outdir="${fil##$srcdir}"
+          # Remove the source dir. (including the last '/').
+          outdir="${fil##$srcdir/}"
+          # Remove the filename portion (including the last '/').
           outdir="$dstdir/${outdir%/*}"
           # File "base name" (without extension).
           filebn="${fil##*/}"
@@ -62,6 +68,12 @@ fi
           thumbnail_image_file="${outfile%.mp4}.png"
 
           echo -e "\n\nNOW PROCESSING FILE '$fil' (`date`)\n\n"
+
+          # Source file may have disappeared.
+          if [ ! -e "$fil" ]; then
+            echo -e "\n\n\nERROR (!): Source file '$fil' has gone away :-/ ( SKIPPING ).\n\n"
+            continue
+          fi
 
           echo "Source file details (ls) :"
           ls -ladh "$fil"
@@ -213,20 +225,20 @@ fi
             # FIXME: check that the cover image exists.
             cat <<EOF | mail -s "$0: $outfile" -a "$thumbnail_image_file" cadet.fabien+sys@gmail.com
 Hi! this is $0, just to let you know that I'm done with one more file encoding,
-here's the input file '$fil' compared to the output file '$outfile' :
+here are your input and output files compared :
 
 $(ls -lahd "$fil" "$outfile")
 
 FFmpeg command was :
 
- ${ffmpeg_cmd[@]} </dev/null
+ ${ffmpeg_cmd[@]} "$outfile" </dev/null
 
 * http://winterfell.local/~fabi/$outfile
 * smb://winterfell/fabi/$outfile
 
 Media details :
 
-$(ffprobe -loglevel info -hide_banner "$outfile")
+$(ffprobe -hide_banner "$outfile" 2>&1)
 
 Cheers.
 EOF
@@ -246,7 +258,8 @@ EOF
         done ) < <(find "$1" -type f \
                     -iregex ".*\.\(mp4\|mkv\|flv\|avi\|mpg\|mpeg\|ogm\|mov\|dv\)" \
                     -print0 | xargs -0r ls -ltr --time-style=long-iso             \
-                            | sort -k6,6rb -k5,5n)
+                            | sort -k5,5n)
+                            #| sort -k6,6rb -k5,5n)
                                # ^ Sort files by date (newest first, do not
                                #   consider time) and file size (so that we process
                                #   smaller files of the day first).
