@@ -81,7 +81,7 @@ fi
           if true; then
             echo -e "Generating a thumbnail image :"
             if ! time ffmpeg -ss 10 -i "$fil"       \
-              -vf "thumbnail,scale=640:360" \
+              -vf "thumbnail,scale=-1:360" \
               -frames:v 1                 \
               -vsync vfr                  \
               -y "$thumbnail_image_file" </dev/null ;
@@ -118,7 +118,7 @@ fi
             echo -e "    ${ffmpeg_cmd[@]} \"$outfile_tmp\" </dev/null \n"
 
             # Original single pass encoding.
-            if false; then
+            if true; then
               time \
                 "${ffmpeg_cmd[@]}" "$outfile_tmp" </dev/null
             else # 2-pass encoding.
@@ -221,9 +221,12 @@ FFmpeg command was :
 
  ${ffmpeg_cmd[@]} </dev/null
 
-http://winterfell.local/~fabi/$outfile
+* http://winterfell.local/~fabi/$outfile
+* smb://winterfell/fabi/$outfile
 
-smb://winterfell/fabi/$outfile
+Media details :
+
+$(ffprobe -loglevel info -hide_banner "$outfile")
 
 Cheers.
 EOF
