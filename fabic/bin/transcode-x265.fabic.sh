@@ -104,21 +104,43 @@ fi
               ffmpeg
                 -loglevel info -stats
                 -i "$fil"
-                -codec:v libx265 -x265-params log-level=info
+                -codec:v libx265 #-x265-params log-level=info
                 -preset medium -threads 0
                 -vf format=yuv420p
                 -crf 26 -bf 2 -flags +cgop -g 60
                 -c:a copy
                 -movflags faststart
-                -y "$outfile_tmp"
+                -y # "$outfile_tmp"
             )
 
-            echo -e "\nNow running the actual FFmpeg/libx265 video transcoding command :\n"
-            echo -e "    ${ffmpeg_cmd[@]} </dev/null \n"
+            echo -e "\nNow running the actual FFmpeg/libx265 video transcoding, "
+            echo -en "command will be something like :\n"
+            echo -e "    ${ffmpeg_cmd[@]} \"$outfile_tmp\" </dev/null \n"
 
-            time \
-              "${ffmpeg_cmd[@]}" \
-                                   </dev/null #2>"$filebn.ffmpeg.log"
+            # Original single pass encoding.
+            if false; then
+              time \
+                "${ffmpeg_cmd[@]}" "$outfile_tmp" </dev/null
+            else # 2-pass encoding.
+              # PASS 1
+              echo -e "\nFIRST PASS :\n"
+              if ! time "${ffmpeg_cmd[@]}" -pass 1 -x265-params pass=1 \
+                -f mp4 /dev/null </dev/null ;
+              then
+                echo "ERROR: FFmpeg first pass invocation failed -__-"
+                echo -e "\nRETRYING WITH A SINGLE PASS ENCODING :\n"
+                time \
+                  "${ffmpeg_cmd[@]}" "$outfile_tmp" \
+                                                     </dev/null
+              else
+                echo -e "\nFirst pass completed.\n\nNOW RUNNING SECOND PASS :\n"
+                time \
+                  "${ffmpeg_cmd[@]}" -pass 2 -x265-params pass=2 \
+                    "$outfile_tmp" \
+                                    </dev/null
+              fi
+
+            fi
 
             retv=$?
 
