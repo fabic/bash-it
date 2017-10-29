@@ -76,18 +76,14 @@ fi
                 echo "!!! BEWARE: !!! FAILED to create dir. '$outdir' (and we ain't do nothing about it)."
           fi
 
-          ffmpeg_cmd=( ffmpeg
-          )
-
           # Generate a COVER IMAGE that we'll add later on to the MP4.
           # https://superuser.com/q/538112
           if true; then
             echo -e "Generating a thumbnail image :"
             if ! time ffmpeg -ss 10 -i "$fil"       \
-              -vf "select=gt(scene\,0.4)" \
-              -frames:v 5                 \
+              -vf "thumbnail,scale=640:360" \
+              -frames:v 1                 \
               -vsync vfr                  \
-              -vf fps=fps=1/600           \
               -y "$thumbnail_image_file" </dev/null ;
             then
               echo "WARNING: Generation of the cover image may well have failed here,"
@@ -102,6 +98,7 @@ fi
           # Will be set to the exit status of FFmpeg.
           retv=127
 
+          # Actual encoding happens here.
           if true; then
             echo -e "\nNow running the actual FFmpeg/libx265 video transcoding command :\n"
             time ffmpeg -loglevel info -stats  \
@@ -153,18 +150,21 @@ fi
           ls -ladh "$outfile_tmp"
           echo
 
+          # Check exit status, and rename temp. file to the final output
+          # file name (with optional handling of cover image).
           if [ $retv -gt 0 ]; then
               echo "WARNING: FFmpeg exited with a non-zero status code, STOPPING NOW.".
               break
           elif [ ! -f "$outfile_tmp" ]; then
               echo "WARNING: Temporary output file '$outfile_tmp' DOES NOT EXIST !"
-          else
+          else # GOOD.
               echo "DONE: Now renaming temp. file to '$outfile'"
               mv -v "$outfile_tmp" "$outfile" ||
                   echo "WARNING: Failed to renamed the temporary output file '$outfile_tmp' to '$outfile'."
               echo "INFO: Input file versus output file :"
               ls -ladh "$fil" "$outfile"
 
+              # Add cover image to the MP4 output file.
               if type -p mp4art >/dev/null && [ -e "$thumbnail_image_file" ]; then
                 echo "About to add the previously generated cover image '$thumbnail_image_file' :"
                 mp4art -zv --add "$thumbnail_image_file" "$outfile" ||
@@ -176,7 +176,31 @@ fi
               fi
           fi
 
+          # Send notification e-mail (with the cover image attached).
+          if true; then
+            echo "Sending notification e-mail."
+            # FIXME: check that the cover image exists.
+            cat <<EOF | mail -s "$0: $outfile" -a "$thumbnail_image_file" cadet.fabien+sys@gmail.com
+Hi! this is $0, just to let you know that I'm done with one more file encoding,
+here's the input file '$fil' compared to the output file '$outfile' :
+
+$(ls -lahd "$fil" "$outfile")
+
+Cheers.
+EOF
+          fi
+
+          # Remove thumbnail image.
+          if [ -e "$thumbnail_image_file" ]; then
+            echo "Removing the generated cover image '$thumbnail_image_file'."
+            rm -v "$thumbnail_image_file" ||
+              echo "WARNING: Ouch?! failed to remove '$thumbnail_image_file' ?!"
+          fi
+
           echo -e "\n\n\t( NEXT ITERATION )\n\n"
+
+               # Here's the process-substitution artifact that will feed the loop
+               # with files.
         done ) < <(find "$1" -type f \
                     -iregex ".*\.\(mp4\|mkv\|flv\|avi\|mpg\|mpeg\|ogm\|mov\|dv\)" \
                     -print0 | xargs -0r ls -ltr --time-style=long-iso             \
