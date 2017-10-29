@@ -28,6 +28,10 @@ if [ ! -d "$dstdir" ]; then
         echo "WARNING: Failed to create dest. dir. '$dstdir'"
 fi
 
+# TODO: ensure source and dest. dir. be not the same !
+
+
+
 # First loop version, which was buggy for some obscur reason.
 #find "$1" -type f -iregex ".*\.\(mp4\|mkv\|flv\|avi\|mpg\|mpeg\|ogm\|mov\|dv\)" \
 #    | ( while read fil ; do
@@ -55,6 +59,8 @@ fi
           outfile="$outdir/${filebn}.mp4"
           outfile_tmp="$outdir/${filebn}${tmpext}"
 
+          thumbnail_image_file="${outfile%.mp4}.png"
+
           echo -e "\n\nNOW PROCESSING FILE '$fil' (`date`)\n\n"
 
           echo "Source file details (ls) :"
@@ -70,18 +76,54 @@ fi
                 echo "!!! BEWARE: !!! FAILED to create dir. '$outdir' (and we ain't do nothing about it)."
           fi
 
+          ffmpeg_cmd=( ffmpeg
+          )
+
+          # Generate a COVER IMAGE that we'll add later on to the MP4.
+          # https://superuser.com/q/538112
+          if true; then
+            echo -e "Generating a thumbnail image :"
+            if ! time ffmpeg -ss 10 -i "$fil"       \
+              -vf "select=gt(scene\,0.4)" \
+              -frames:v 5                 \
+              -vsync vfr                  \
+              -vf fps=fps=1/600           \
+              -y "$thumbnail_image_file" </dev/null ;
+            then
+              echo "WARNING: Generation of the cover image may well have failed here,"
+              echo "         for FFmpeg exit status is non-zero: $?"
+            else
+              echo "Done, cover image would be :"
+              ls -lahd "$thumbnail_image_file"
+              echo
+            fi
+          fi
+
+          # Will be set to the exit status of FFmpeg.
           retv=127
 
           if true; then
-            time ffmpeg -loglevel info -stats \
+            echo -e "\nNow running the actual FFmpeg/libx265 video transcoding command :\n"
+            time ffmpeg -loglevel info -stats  \
                      -i "$fil"                 \
                      -codec:v libx265 -x265-params log-level=info \
-                     -preset slow -crf 24 -bf 2 -flags +cgop -pix_fmt yuv420p -threads 0 \
+                     -preset medium -threads 0 \
+                     -vf format=yuv420p      \
+                     -crf 26 -bf 2 -flags +cgop -g 60 \
                      -c:a copy           \
                      -movflags faststart \
                      -y "$outfile_tmp"   \
                                           </dev/null #2>"$filebn.ffmpeg.log"
             retv=$?
+
+            # Flags that you removed (and put back -_-) :
+            #   * -bf 2  : max. number of B-frames, defaults to 16 for H264.
+            #   * -flags +cgop -g 60 : Enable Closed Group Of Images, and a GOP
+            #                          length of 60 frames ~= 2 seconds x 30 images/sec.
+            #   * -profile:v main : libx265 still doesn't know about this option.
+            #
+            # * -crf 24 : visual output is said to be "visually transparent".
+            # * -crf 28 : default for libx265.
 
             # Note that we're binding stdin to /dev/null here for it fixes an issue
             # where FFmpeg (or the libx265 encoder) vomits a tremendous amount of
@@ -99,8 +141,11 @@ fi
             # _not to_ output its loads of garbage. As it may happen that FFmpeg
             # is not passing the previously defined '-loglevel info' to libx265
             # (said StackOverflow).
+
+            # -pix_fmt yuv420p <=> -vf format=yuv420p
           else
             echo "!! BEWARE !! FFmpeg is not executed here, see 'if false; then ...' in '${BASH_SOURCE[0]}'."
+            #retv=0
           fi
 
           echo -e "\n\nDONE WITH FILE '$fil' (`date`).\nFFmpeg exit status is '$retv'\n\n"
@@ -117,7 +162,18 @@ fi
               echo "DONE: Now renaming temp. file to '$outfile'"
               mv -v "$outfile_tmp" "$outfile" ||
                   echo "WARNING: Failed to renamed the temporary output file '$outfile_tmp' to '$outfile'."
-              ls -ladh "$outfile"
+              echo "INFO: Input file versus output file :"
+              ls -ladh "$fil" "$outfile"
+
+              if type -p mp4art >/dev/null && [ -e "$thumbnail_image_file" ]; then
+                echo "About to add the previously generated cover image '$thumbnail_image_file' :"
+                mp4art -zv --add "$thumbnail_image_file" "$outfile" ||
+                  echo "WARNING: The mp4art command failed for some reason."
+              else
+                echo "NOTICE: We're NOT adding a cover image to that MP4 file,"
+                echo "        for either the mp4art binary wasn't found, "
+                echo "        or the thumbnail image '$thumbnail_image_file' was not generated."
+              fi
           fi
 
           echo -e "\n\n\t( NEXT ITERATION )\n\n"
