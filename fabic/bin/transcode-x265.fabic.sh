@@ -100,17 +100,26 @@ fi
 
           # Actual encoding happens here.
           if true; then
+            ffmpeg_cmd=(
+              ffmpeg
+                -loglevel info -stats
+                -i "$fil"
+                -codec:v libx265 -x265-params log-level=info
+                -preset medium -threads 0
+                -vf format=yuv420p
+                -crf 26 -bf 2 -flags +cgop -g 60
+                -c:a copy
+                -movflags faststart
+                -y "$outfile_tmp"
+            )
+
             echo -e "\nNow running the actual FFmpeg/libx265 video transcoding command :\n"
-            time ffmpeg -loglevel info -stats  \
-                     -i "$fil"                 \
-                     -codec:v libx265 -x265-params log-level=info \
-                     -preset medium -threads 0 \
-                     -vf format=yuv420p      \
-                     -crf 26 -bf 2 -flags +cgop -g 60 \
-                     -c:a copy           \
-                     -movflags faststart \
-                     -y "$outfile_tmp"   \
-                                          </dev/null #2>"$filebn.ffmpeg.log"
+            echo -e "    ${ffmpeg_cmd[@]} </dev/null \n"
+
+            time \
+              "${ffmpeg_cmd[@]}" \
+                                   </dev/null #2>"$filebn.ffmpeg.log"
+
             retv=$?
 
             # Flags that you removed (and put back -_-) :
@@ -185,6 +194,14 @@ Hi! this is $0, just to let you know that I'm done with one more file encoding,
 here's the input file '$fil' compared to the output file '$outfile' :
 
 $(ls -lahd "$fil" "$outfile")
+
+FFmpeg command was :
+
+ ${ffmpeg_cmd[@]} </dev/null
+
+http://winterfell.local/~fabi/$outfile
+
+smb://winterfell/fabi/$outfile
 
 Cheers.
 EOF
