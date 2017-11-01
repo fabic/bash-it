@@ -5,7 +5,7 @@
 
 # USAGE NOTICE
 if [ $# -lt 2 ]; then
-    echo "Usage: $0 <source_dir> <destination_dir>"
+    echo "Usage: $0 <source_dir> <destination_dir> [H265|VP9]"
     echo
     echo -e "\tYet another FFmpeg encoging script."
     echo -e "\n\tThis one searches for video files into <source_dir> and re-encodes"
@@ -16,6 +16,8 @@ fi
 
 srcdir="$1"
 dstdir="$2"
+use_codec="${3:-VP9}"
+
 
 # Remove eventual leading slash (sugar).
 srcdir="${srcdir%/}"
@@ -61,11 +63,12 @@ fi
           filebn="${fil##*/}"
           filebn="${filebn%.*}"
 
-          tmpext=".tmp.mp4"
-          outfile="$outdir/${filebn}.mp4"
+          ext="webm"
+          tmpext=".tmp.$ext"
+          outfile="$outdir/${filebn}.${ext}"
           outfile_tmp="$outdir/${filebn}${tmpext}"
 
-          thumbnail_image_file="${outfile%.mp4}.png"
+          thumbnail_image_file="${outfile%.$ext}.jpg"
 
           echo -e "\n\nNOW PROCESSING FILE '$fil' (`date`)\n\n"
 
@@ -93,7 +96,7 @@ fi
           if true; then
             echo -e "Generating a thumbnail image :"
             if ! time ffmpeg -ss 10 -i "$fil"       \
-              -vf "thumbnail,scale=-1:360" \
+              -vf "thumbnail,scale=-1:480" \
               -frames:v 1                 \
               -vsync vfr                  \
               -y "$thumbnail_image_file" </dev/null ;
@@ -112,47 +115,48 @@ fi
 
           # Actual encoding happens here.
           if true; then
-            ffmpeg_cmd=(
-              ffmpeg
-                -loglevel info -stats
-                -i "$fil"
-                -codec:v libx265 #-x265-params log-level=info
-                -preset medium -threads 0
-                -vf format=yuv420p
-                -crf 26 -bf 2 -flags +cgop -g 60
-                -c:a copy
-                -movflags faststart
-                -y # "$outfile_tmp"
-            )
+            if [ "$use_codec" == "VP9" ]; then
+              ffmpeg_cmd=(
+                ffmpeg
+                  -loglevel info -stats
+                  -i "$fil"
+                  -codec:v libvpx-vp9
+                    -vf format=yuv420p
+                    -crf 31 -b:v 0
+                    -deadline good
+                    -tile-columns 2 -threads 4
+                    -flags +cgop -g 240
+                  -codec:a libopus -b:a 96k
+                    -ac 2 -filter:a loudnorm # Defaults: -vbr on -compression_level 10
+                  -movflags faststart
+                  #-attach "$thumbnail_image_file" -metadata:s:t mimetype=image/jpeg
+                  #-strict -2 # MP4 container is marked "experimental".
+                  -y "$outfile_tmp"
+              )
+            elif [ "$use_codec" == "H265" ]; then
+              ffmpeg_cmd=(
+                ffmpeg
+                  -loglevel info -stats
+                  -i "$fil"
+                  -codec:v libx265 #-x265-params log-level=info
+                  -preset medium -threads 0
+                  -vf format=yuv420p
+                  -crf 26 -bf 2 -flags +cgop -g 60
+                  -c:a copy
+                  -movflags faststart
+                  -y "$outfile_tmp"
+              )
+            else
+              echo -e "\n\nERROR: \$use_codec=\"$use_codec\" is neither H265, nor VP9."
+              break
+            fi
 
             echo -e "\nNow running the actual FFmpeg/libx265 video transcoding, "
             echo -en "command will be something like :\n"
             echo -e "    ${ffmpeg_cmd[@]} \"$outfile_tmp\" </dev/null \n"
 
-            # Original single pass encoding.
-            if true; then
-              time \
-                "${ffmpeg_cmd[@]}" "$outfile_tmp" </dev/null
-            else # 2-pass encoding.
-              # PASS 1
-              echo -e "\nFIRST PASS :\n"
-              if ! time "${ffmpeg_cmd[@]}" -pass 1 -x265-params pass=1 \
-                -f mp4 /dev/null </dev/null ;
-              then
-                echo "ERROR: FFmpeg first pass invocation failed -__-"
-                echo -e "\nRETRYING WITH A SINGLE PASS ENCODING :\n"
-                time \
-                  "${ffmpeg_cmd[@]}" "$outfile_tmp" \
-                                                     </dev/null
-              else
-                echo -e "\nFirst pass completed.\n\nNOW RUNNING SECOND PASS :\n"
-                time \
-                  "${ffmpeg_cmd[@]}" -pass 2 -x265-params pass=2 \
-                    "$outfile_tmp" \
-                                    </dev/null
-              fi
-
-            fi
+            time \
+              "${ffmpeg_cmd[@]}" </dev/null
 
             retv=$?
 
@@ -208,7 +212,9 @@ fi
               ls -ladh "$fil" "$outfile"
 
               # Add cover image to the MP4 output file.
-              if type -p mp4art >/dev/null && [ -e "$thumbnail_image_file" ]; then
+              if type -p mp4art >/dev/null && [ -e "$thumbnail_image_file" ] \
+                                           && [ "$ext" == "mp4" ];
+              then
                 echo "About to add the previously generated cover image '$thumbnail_image_file' :"
                 mp4art -zv --add "$thumbnail_image_file" "$outfile" ||
                   echo "WARNING: The mp4art command failed for some reason."
@@ -220,7 +226,7 @@ fi
           fi
 
           # Send notification e-mail (with the cover image attached).
-          if true; then
+          if false; then
             echo "Sending notification e-mail."
             # FIXME: check that the cover image exists.
             cat <<EOF | mail -s "$0: $outfile" -a "$thumbnail_image_file" cadet.fabien+sys@gmail.com
@@ -231,7 +237,7 @@ $(ls -lahd "$fil" "$outfile")
 
 FFmpeg command was :
 
- ${ffmpeg_cmd[@]} "$outfile" </dev/null
+ ${ffmpeg_cmd[@]} </dev/null
 
 * http://winterfell.local/~fabi/$outfile
 * smb://winterfell/fabi/$outfile
@@ -256,7 +262,7 @@ EOF
                # Here's the process-substitution artifact that will feed the loop
                # with files.
         done ) < <(find "$1" -type f \
-                    -iregex ".*\.\(mp4\|mkv\|flv\|avi\|mpg\|mpeg\|ogm\|mov\|dv\)" \
+                    -iregex ".*\.\(mp4\|mkv\|flv\|webm\|xvid\|divx\|avi\|mpg\|mpeg\|ogm\|mov\|dv\)" \
                     -print0 | xargs -0r ls -ltr --time-style=long-iso             \
                             | sort -k5,5n)
                             #| sort -k6,6rb -k5,5n)
