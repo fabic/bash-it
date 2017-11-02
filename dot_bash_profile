@@ -8,12 +8,8 @@
 # runs your .bashrc and is recommended by the bash info pages.
 # FABIC/2017-02-12 : Note that Bash-it moved everything to .bashrc "recently".
 if true && [ -f ~/.bashrc ]; then
-    echo
-    echo "# FYI: About to source your ~/.bashrc  [${BASH_SOURCE[0]}]"
-    echo
+    echo "FYI: About to source your ~/.bashrc  [${BASH_SOURCE[0]}]"
     . ~/.bashrc
-    echo
-    echo "# FYI: Sourced your ~/.bashrc [${BASH_SOURCE[0]}]"
-    echo
+    echo "FYI: Sourced your ~/.bashrc [${BASH_SOURCE[0]}]"
 fi
 

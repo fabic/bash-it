@@ -7,7 +7,8 @@
 PREFIX=/opt
 
 # Note that this one is typically declared from your ~/.bash_profile
-SlashOptSubdirs=${SlashOptSubdirs:-( "$SlashOptSubdirs" )}
+[ -z ${SlashOptSubdirs+x} ] &&
+  SlashOptSubdirs=(  )
 
 [ ! -d "$PREFIX" ] && return
 
@@ -39,7 +40,7 @@ do
     [ -d "$dir/bin" ] && pathprepend "$dir/bin"
 
     # LD_LIBRARY_PATH
-    # 
+    #
     # Commented out, seems not be a good idea apparently (see http://xahlee.org/UnixResource_dir/_/ldpath.html),
     # and hopefully those custom-built software get rpath-ed somehow, /me guess.
     #[ -d "$dir/lib"   ] && pathprepend "$dir/lib" LD_LIBRARY_PATH
