@@ -45,7 +45,7 @@ function vimdiff_cycle()
         local prev=""
         for filename in "$@";
         do
-                if [ "x$prev" = "x" ]; then 
+                if [ "x$prev" = "x" ]; then
                         prev="$filename"
                         continue
                 fi
@@ -96,4 +96,17 @@ function ftree()
 	return $?
 }
 
+# Ch.dir. to the directory specified as 1st argument, hence `cd -P ...`
+# But: if target is a file, then ch.dir. into the containing directory.
+# Also, if target is a symlink, then attempt to jump into the pointed to dir.
+function cdp()
+{
+    if [ -L "$1" ]; then # BEWARE! RECURSION!
+        cdp "$(readlink "$1")"
+    elif [ ! -d "$1" ]; then
+        cd -P "$(dirname "$1")"
+    else
+        cd -P "$1"
+    fi
+}
 # vi: et ts=4 sts=4 sw=4

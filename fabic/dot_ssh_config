@@ -1,0 +1,11 @@
+# ~/.ssh/config ( FABIC )
+
+Host *
+  ServerAliveInterval 240
+  ServerAliveCountMax 2
+  # Enable SSH channel multiplexing for all hosts (!)
+  ControlPath ~/.ssh/control-master-%r@%h:%p
+  ControlMaster auto
+  ControlPersist 1h
+  # Note the _always_ forwarding agent is questionable (!)
+  ForwardAgent yes

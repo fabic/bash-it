@@ -27,7 +27,8 @@ alias l1='l -1sh'
 alias lh='ll -h'
 alias latr='la -tr'
 
-alias cdp='cd -P'
+#alias cdp='cd -P'
+# ^ FABIC 2017-11: Replace with a function.
 alias cpi='cp -i'
 
 # du "star" & sort
