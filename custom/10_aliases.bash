@@ -34,7 +34,7 @@ alias sr='screen -r'
 alias sR='screen -R'
 
 # Sublime Text
-alias st='sublime_text'
+alias st='sublime_text.sh'
 alias sta='st -a'
 alias stn='st -n'
 alias stw='st -w'
