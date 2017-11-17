@@ -43,7 +43,7 @@ alias gcm='gc --amend'
 
 alias gb='g branch'
 alias gba='gb -a'
-alias gbv='gb -v'
+alias gbv='gb -vv'
 # Remote tracking branch :
 alias gbr='g rev-parse --abbrev-ref --symbolic-full-name @{u}'
 alias gbn='g rev-parse --abbrev-ref --symbolic-full-name HEAD'
