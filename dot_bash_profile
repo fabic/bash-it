@@ -13,3 +13,8 @@ if true && [ -f ~/.bashrc ]; then
     echo "FYI: Sourced your ~/.bashrc [${BASH_SOURCE[0]}]"
 fi
 
+# We're _not_ sourcing that thing.
+if [ -s ~/.profile ]; then
+  echo "WARN: Dude, you happen to have a ~/.profile script, and we're _not_ sourcing it."
+  echo "      (because things end up getting messy when you do)."
+fi

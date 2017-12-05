@@ -102,11 +102,12 @@ function ftree()
 function cdp()
 {
     if [ -L "$1" ]; then # BEWARE! RECURSION!
-        cdp "$(readlink "$1")"
+        cdp "$(readlink -f "$1")"
     elif [ ! -d "$1" ]; then
         cd -P "$(dirname "$1")"
     else
         cd -P "$1"
     fi
 }
-# vi: et ts=4 sts=4 sw=4
+
+# vi: ft=sh et ts=4 sts=4 sw=4

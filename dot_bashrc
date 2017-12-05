@@ -15,6 +15,10 @@
 #   Some time ago, _they_ used to have these stuff in `dot_bash_profile`.
 #
 
+# FABIC: Group-work friendly umask now/here so that any of g+rwx is preserved,
+#        (done here early for Rsync/Scp/etc).
+umask 0002
+
 # Test for an interactive shell.  There is no need to set anything
 # past this point for scp and rcp, and it's important to refrain from
 # outputting anything in those cases.
@@ -32,8 +36,7 @@ if [[ $- != *i* ]] ; then
 fi
 
 
-#
-# Auto-Screen ?
+## ~~Auto-Screen~~ (edit: this is your old setup).
 #
 # FABIC/2012-11-03
 # See http://geekscrap.com/2010/02/using-screen-as-your-login-shell/
@@ -50,6 +53,9 @@ then
     echo "///////////////////////////////////////////////////////"
     echo
 fi
+
+# F.2012-10-31 : List of screens.
+#screen -ls
 
 
 # TMUX / Screen : re-attach to existing sessions automatically.
@@ -70,7 +76,7 @@ if true && [[ $SHLVL == 1 ]]; then
             echo
         fi
     fi
-    # SCREEN ?
+    # SCREEN ? (TODO: chaining this here after we run Tmux ain't great, but you don't resort to Screen that often, so anyway...).
     if type -P screen > /dev/null && [[ ! -z "$(screen -ls | grep '^\s*[0-9]*\.\S\+\s\+(Detached)\s*$')" ]]; then
         if screen -r ; then
             echo
@@ -85,9 +91,12 @@ if true && [[ $SHLVL == 1 ]]; then
 fi
 
 
+# TMUX: Inform user that he is run by tmux.
 if [ ! -z ${TMUX+x} ]; then
   echo "FYI: We're being run by TMUX somehow here."
-  [ ! -S "${TMUX%%,*}" ] && echo "FYI: WARNING: \$TMUX='${TMUX%%,*}' is supposed to be a socket."
+  false && tmux list-session |& sed -e 's/^/       - /'
+  [ ! -S "${TMUX%%,*}" ] &&
+    echo "FYI: WARNING: \$TMUX='${TMUX%%,*}' is supposed to be a socket."
 fi
 
 
@@ -136,9 +145,6 @@ alias ebl='exec bash -l'
 # FABIC: New root shell (and replace current process).
 alias esu='exec sudo su -'
 
-# FABIC: Setting umask here so that g+w for Rsync/Scp.
-umask 0002
-
 
 #export GIT_EDITOR='/usr/bin/mate -w'
 export EDITOR="vim"
@@ -154,7 +160,7 @@ elif [ -d "$HOME/dev/bash-it" ]; then
 fi
 
 # Lock and Load a custom theme file
-# location /.bash_it/themes/
+# ( location ~/.bash_it/themes/ )
 export BASH_IT_THEME='fabi'
 
 # (Advanced): Change this to the name of your remote repo if you
@@ -165,7 +171,7 @@ export BASH_IT_THEME='fabi'
 export GIT_HOSTING='git@github.com:fabic'
 
 # Don't check mail when opening terminal.
-unset MAILCHECK
+#unset MAILCHECK
 
 # Change this to your console based IRC client of choice.
 export IRC_CLIENT='irssi'
@@ -190,8 +196,8 @@ export SHORT_HOSTNAME=$(hostname -s)
 # export BASH_IT_AUTOMATIC_RELOAD_AFTER_CONFIG_CHANGE=1
 
 
-# FABIC: For custom/05_slash_opt_env.bash, list of sub-directories
-# there that follow the FHS-like layout (bin, etc, share/man, lib)
+# FABIC: For `custom/05_slash_opt_env.bash`: list of sub-directories under /opt
+#        there that follow the FHS-like layout (bin, etc, share/man, lib)
 #SlashOptSubdirs=(  )
 #SlashOptSubdirs=( mercurial html_tidy apache php$PHP_VERSION git vim )
 
@@ -238,7 +244,7 @@ if [ -f ~/.bash_aliases ]; then
 fi
 
 
-# SSH: seahorse wrapper script for “SSH ask pass” instrumentation, which
+# SSH: Seahorse wrapper script for “SSH ask pass” instrumentation, which
 #      hardly ever works as expected btw.
 # FABIC/2014-08-18 : temp. here (shall I set this in ~/.xinit ot xsession ?
 #export SSH_ASKPASS=/usr/lib64/seahorse/seahorse-ssh-askpass
@@ -258,14 +264,38 @@ then
     echo "# WARN: Dude! \$DISPLAY is not set, and it happens that you're doing"
     echo "#       SSH here, so we are inferring \$DISPLAY='$DISPLAY'"
     echo "#       in the unlikely case you would like to forward back some X11..."
-    echo "#       (like issuing \`xhost +\` from whence you came, if u care not)"
+    echo "#       (like issuing \`xhost +\` from whence you came, or whatever)"
     echo
 fi
 
-# FABIC: Ruby gems bin dir.
+# FABIC: Ruby GEMs bin. dir. (fixme: dirty).
+#        (skept if RVM is installed).
 if [ -d ~/.gem/ruby/ ] && [ -d "$(ls -1d ~/.gem/ruby/*/bin | sort -r | head -n1)" ];
 then
-  pathprepend "$(ls -1d ~/.gem/ruby/*/bin | sort -r | head -n1)"
+  echo "FYI: Found some Ruby stuff under ~/.gem/ruby/..."
+  rubies=( "$(ls -1d ~/.gem/ruby/*/bin | sort -V)" )
+  if [ ${#rubies[@]} -gt 0 ]; then
+    if [ -d ~/.rvm/bin/rvm ]; then
+      echo "     ^ Skipping \$PATH setup : RVM is installed."
+    else
+      echo "     ^ Adding Ruby GEM bin. dir. '${rubies[0]}'."
+      pathprepend "${rubies[0]}"
+    fi
+  else
+    echo "     ^ Found no ~/.gem/ruby/*/bin/ GEM bin. dir."
+  fi
+  unset rubies
+fi
+
+# Ruby RVM
+if [ -x ~/.rvm/bin/rvm ]; then
+  echo "FYI: Found RVM (Ruby Versions Manager)."
+  pathprepend $HOME/.rvm/bin
+  if [ -s "$HOME/.rvm/scripts/rvm" ]; then
+    source "$HOME/.rvm/scripts/rvm"
+    echo "     ^ Sourced RVM shell script '$HOME/.rvm/scripts/rvm'."
+  fi
+
 fi
 
 # Host-local ~/.bashrc.d/ : may contain some .sh / .bash scripts that are
@@ -315,25 +345,47 @@ if [ -d "${nodejs_local_binary_dist}" ] && [ -x "$nodejs_local_binary_dist/bin/n
   echo "FYI: Found Node.js at '$nodejs_local_binary_dist/bin/node'"
   pathprepend "$nodejs_local_binary_dist/bin" PATH
   pathprepend "$nodejs_local_binary_dist/include" INCLUDE
-  pathprepend "$nodejs_local_binary_dist/share/man" MANPATH
+  #pathprepend "$nodejs_local_binary_dist/share/man" MANPATH
+  # ^ DON'T -_- `man` ain't no smart at all.
 fi
 unset nodejs_local_binary_dist
 
+# Rust! ( https://www.rust-lang.org/ )
+if [ -f "$HOME/.cargo/bin/rustc" ]; then
+  echo "FYI: Dude, do some Rust coding or you might rust o_o"
+  pathprepend "$HOME/.cargo/bin"
+fi
 
 # `~/bin` shall come last so that I can override about anything.
 # ( Remember that you typically symlink `bash-it/fabic/bin/` as `~/bin/` )
 [ -d ~/bin ] && pathprepend ~/bin
 
 
-# F.2012-10-31 : List of screens.
-#screen -ls
-
-
 # FABIC: Print out some environment variables :
-echo "Your environment, some of it :"
-for e in SHLVL DISPLAY EDITOR LANG LD_LIBRARY_PATH PATH SSH_CONNECTION SSH_ASKPASS SSH_AUTH_SOCK MANPATH TMUX INCLUDE ;
-do
-  if [ ! -z ${!e+x} ]; then
-    echo "   $e = ${!e}"
-  fi
-done
+if true; then
+  echo "Your environment, some of it :"
+  for e in SHLVL DISPLAY EDITOR LANG LD_LIBRARY_PATH PATH SSH_CONNECTION SSH_ASKPASS SSH_AUTH_SOCK MANPATH TMUX INCLUDE ;
+  do
+    if [ ! -z ${!e+x} ]; then
+      echo "   $e = ${!e}"
+    fi
+  done
+fi
+
+# FABIC: Print out the path of some executables.
+if true; then
+  Clang="$(type -p clang)"
+  Rust="$(type -p rustc)"
+  NodeJS="$(type -p node || type -p nodejs)"
+  JavaC="$(type -p javac)"
+  Php="$(type -p php)"
+  Ruby="$(type -p ruby)"
+
+  for vname in Clang Rust NodeJS JavaC Php Ruby; do
+    echo "> $vname is ${!vname}"
+  done
+
+  unset Clang Rust NodeJS JavaC Php Ruby
+fi
+
+# vim: ft=sh
