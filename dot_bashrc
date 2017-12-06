@@ -319,7 +319,7 @@ fi
 # @link http://unix.stackexchange.com/a/90869
 # ( See also the SSH_ASKPASS setup somewhere here ).
 if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ] ; then
-    echo "# FYI: Dude, starting ssh-agent from your .bash_profile"
+    echo "# FYI: Dude, starting ssh-agent from ${BASH_SOURCE[0]}"
     echo "# BTW: This may _not_ be what you want (!!)"
     eval `ssh-agent -s`
     #ssh-add
