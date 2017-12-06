@@ -1,0 +1,45 @@
+#!/bin/bash
+#
+# FABIC 2017-12
+#
+# fabic.net : Create a new post from command line.
+
+# TODO: may do sthg with STDIN content ? (for piping)
+
+repository="$HOME/dev/fabic.github.com"
+posttitle="$*"
+postfile="_posts/notes/$(date '+%Y-%m-%d')-${posttitle// /-}.md"
+
+if [ ! -d "$repository" ]; then
+  echo "ERROR: Repository dir. '$repository' does not exist."
+  exit 1
+fi
+
+cd "$repository" || exit 2
+
+echo "Post: $posttitle"
+echo "File: $postfile"
+
+if [ ! -s "$postfile" ]; then
+  echo "Creating file '$postfile'"
+  cat <<EOF > "$postfile"
+---
+layout: note
+title: "$posttitle"
+tagline: ""
+category : notes
+tags : [note]
+---
+
+EOF
+fi
+
+echo "Writing clipboard content to file '$postfile' :"
+echo
+
+#( echo -e "\n\`\`\`bash" ; xclip -o ; echo -e "\n\`\`\`") | sed -e 's/^/    /' | tee -a "$postfile"
+xclip -o | sed -e 's/^/    /' | tee -a "$postfile"
+
+exec vim "$postfile"
+
+# vi: ft=sh
