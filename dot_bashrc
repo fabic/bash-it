@@ -270,10 +270,10 @@ fi
 
 # FABIC: Ruby GEMs bin. dir. (fixme: dirty).
 #        (skept if RVM is installed).
-if [ -d ~/.gem/ruby/ ] && [ -d "$(ls -1d ~/.gem/ruby/*/bin | sort -r | head -n1)" ];
+if [ -d ~/.gem/ruby/ ];
 then
   echo "FYI: Found some Ruby stuff under ~/.gem/ruby/..."
-  rubies=( "$(ls -1d ~/.gem/ruby/*/bin | sort -V)" )
+  rubies=( $(ls -1d ~/.gem/ruby/*/bin | sort -Vr) )
   if [ ${#rubies[@]} -gt 0 ]; then
     if [ -d ~/.rvm/bin/rvm ]; then
       echo "     ^ Skipping \$PATH setup : RVM is installed."
@@ -295,7 +295,6 @@ if [ -x ~/.rvm/bin/rvm ]; then
     source "$HOME/.rvm/scripts/rvm"
     echo "     ^ Sourced RVM shell script '$HOME/.rvm/scripts/rvm'."
   fi
-
 fi
 
 # Host-local ~/.bashrc.d/ : may contain some .sh / .bash scripts that are
