@@ -43,6 +43,6 @@ time (
       echo "Ping succeeded, host shall be up."
     fi
 
-    sleep .5
+    sleep 2
   done
 )

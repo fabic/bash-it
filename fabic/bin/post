@@ -27,6 +27,7 @@ if [ ! -s "$postfile" ]; then
 layout: note
 title: "$posttitle"
 tagline: ""
+published: true
 category : notes
 tags : [note]
 ---
@@ -40,6 +41,49 @@ echo
 #( echo -e "\n\`\`\`bash" ; xclip -o ; echo -e "\n\`\`\`") | sed -e 's/^/    /' | tee -a "$postfile"
 xclip -o | sed -e 's/^/    /' | tee -a "$postfile"
 
-exec vim "$postfile"
+vim "$postfile"
+retv=$?
+
+if [ $retv -gt 0 ]; then
+  echo "WARN: Vim exited with status code $retv (stopping here)."
+  exit 3
+fi
+
+# Commit file if non-empty, and git push.
+if [ ! -s "$postfile" ]; then
+  echo "File '$postfile' is empty => we're not committing changes."
+  rm -v "$postfile"
+else
+  # Force Jekyll to rebuild the homepage.
+  touch index.html
+
+  echo "git add"
+  if ! git add "$postfile" ; then
+    echo "ERROR: git add '$postfile' failed for some reasong -_-"
+    exit 4
+  fi
+
+  echo "git commit"
+  if ! git commit -m "Post: $postfile" "$postfile"; then
+    echo "ERROR: git commit failed -_-"
+    exit 5
+  fi
+
+  echo "git push"
+  if ! git push ; then
+    echo "WARNING: Failed to Git push -_-"
+  fi
+
+  echo "git show"
+  if ! git show; then
+    echo "WARNING: Failed to Git show (?!) WTF -_-"
+  fi
+
+  echo
+  echo "-- file --> $repository/$postfile"
+  echo
+  echo "DONE ( http://localhost:3838/ (probably?)"
+  echo
+fi
 
 # vi: ft=sh
