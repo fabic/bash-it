@@ -381,7 +381,9 @@ if true; then
   Ruby="$(type -p ruby)"
 
   for vname in Clang Rust NodeJS JavaC Php Ruby; do
-    echo "> $vname is ${!vname}"
+    if [ ! -z "${!vname}" ]; then
+      echo "> $vname is ${!vname}"
+    fi
   done
 
   unset Clang Rust NodeJS JavaC Php Ruby
