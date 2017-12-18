@@ -110,7 +110,7 @@ function w() {
 [ "`type -t v`" == "alias" ] && unalias v
 
 function v() {
-    echo vim $(w "$@")
+    vim $(w "$@")
 }
 
 # Fcj.2014-03-04
