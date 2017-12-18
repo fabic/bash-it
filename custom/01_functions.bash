@@ -29,13 +29,88 @@ pathappend () {
         export $PATHVARIABLE="${!PATHVARIABLE:+${!PATHVARIABLE}:}$1"
 }
 
-# F.2011-11-22 : Vim in dir...
+# Open Vim in the specified directory, by ch. dir. into it first.
+# F.2011-11-22
 vin() {
     local dest="$1"
     pushd "$dest" &&
         shift &&
         vim "$@" &&
     popd
+}
+
+# `w`
+#
+# Locate files in arguments :
+#   1) exists in/from the current directory ;
+#   2) search for an executable script in $PATH (`type -p ...`) ;
+#   3) if argument is less than 5 characters => output as-is ;
+#   4) Resort to `locate ...` for finding the most recently modified files
+#      (limit to at most 10);
+#
+# Note that the current dir. is always striped off (${arg#$PWD/}) when applicable.
+#
+# FABIC/2017-12-18
+function w() {
+    local arg
+    local fil
+    while [ $# -gt 0 ]; do
+        arg="$1"
+
+        shift
+
+        # Skip "switches" like -h --help -etc.
+        if [ "${arg#-}" != "$arg" ]; then
+            echo "$arg"
+            continue
+        fi
+
+        # (1) First check if file pathname exists _from within_ the current
+        #     directory.
+        if [ -e "$arg" ]; then
+            echo ${arg#$PWD/}
+            continue
+        fi
+
+        # (2) Search for an executable shell script in $PATH.
+        #     FIXME: Filter out binary files (!!)
+        fil="$(type -p "$arg")"
+
+        if [ -n "$fil" ]; then
+            echo "${fil#$PWD/}"
+            continue
+        fi
+
+        # (3) Pass arguments that are less that 5 characters as-is,
+        #     because we'll be using `locate` below.
+        if [ ${#arg} -lt 5 ]; then
+            echo "${arg#$PWD/}"
+            continue
+        fi
+
+        # If arg. does not contain slashes, `locate` file by matching
+        # only it's base name (ignoring the dir. path components).
+        # (locate's default behaviour is to match against the whole pathname).
+        # (!) limit to the 10 most recently modified files.
+        [ "${arg//\//}" != "$arg" ] && bn="" || bn="-b"
+
+        if [ `locate $bn -c -n1 --regex "$arg"` -gt 0 ]; then
+            while read fil; do
+                echo "${fil#$PWD/}"
+            done < <(locate $bn -0 --regex "$arg" | xargs -0r ls -t | head -n10)
+            continue
+        fi
+
+        # No file found => return argument as-is.
+        echo "$arg"
+    done
+}
+
+# Remove the 'v' shell alias that was set in `aliases/available/vim.aliases.bash`
+[ "`type -t v`" == "alias" ] && unalias v
+
+function v() {
+    echo vim $(w "$@")
 }
 
 # Fcj.2014-03-04
