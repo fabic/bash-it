@@ -3,10 +3,69 @@
 # fabic/2016-06-20
 # fabic/2017-12-21: Extracted from that LLVM/Clang project of mine.
 
-# Current source directory :
-here="$( pwd )"
+# Synonym for $PWD, actually.
+here="$PWD"
 
+# Current source directory where a CMakeLists.txt resides.
 there="$here"
+
+# Consecutive '../' that lead from $here to $there.
+# (done this so that we can have the `find ...` command at the end of this
+#  script display files _relative from the original $here directory).
+reldots=""
+
+#
+## Search for a CMakeLists.txt from the current dir.
+## walking upward in parent directories until one is found.
+#
+# FIXME: WTF!? Strange Bash syntax error here with this `if ...`: "unexpected EOF" O_O`
+# FIXME:  ` altered the loop so it's okay now.
+#if [ ! -e "CMakeLists.txt" ]; then
+  #echo "+- Current dir. '$there' has no CMakeLists.txt : Moving up a level to parent dir."
+  while true; do
+    if [ -f "CMakeLists.txt" ]; then
+      # Display message only if we did move up in ancestry.
+      [ "$there" != "$here" ] &&
+        echo "| Found CMakeLists at dir. '$there'." &&
+        echo "|  \` we were in '$here' initially."
+      break
+    # .git may be files, which indicate we're in a Git submodule => continue.
+    elif [ -f .git ]; then
+      echo "| Reached dir. '$there' which has a .git file (most certainly this is a Git submodule ; CONTINUING SEARCH."
+    # We _do_ stop however once we reach a .git/ directory.
+    elif [ -d .git ]; then
+      echo "| Reached dir. '$there' which has a .git/ subdir."
+      echo "|  \`STOPPING NOW (as we found no CMakeLists.txt along the way up from within '$here')."
+      exit 2
+    elif [ ! -w "$there" ]; then
+      echo "| Stumbled upon a non-writable directory '$there' (!)"
+      echo "|  \` STOPPING NOW !"
+    # We should never reach this since we would typically encounter a non-writable
+    # dir. before.
+    elif [ "x$there" == "x/" ]; then
+      echo "| Oops! Reach filesystem root '/'"
+      echo "|  \` (this is unexpected: this loop may be buggy, or not)."
+      echo "|"
+      echo "| (!!) STOPPING NOW (!!)"
+      echo "+"
+      exit 127
+    fi
+
+    cd .. || exit 1
+
+    there="$PWD"
+    reldots="../$reldots"
+  done
+
+  # Strip off the leading '/'
+  reldots="${reldots%%/}"
+#endif
+
+
+# Quickfix /me want Clang generally.
+[ -z ${CC+x}  ] && type -p clang >/dev/null   && CC=clang    && echo "| \$CC was set to $CC"
+[ -z ${CXX+x} ] && type -p clang++ >/dev/null && CXX=clang++ && echo "| \$CXX was set to $CXX"
+
 
 # Target directory for out-of-tree build :
 builddir="build"
@@ -14,8 +73,8 @@ builddir="build"
 # FHS-like local/ dir.
 localdir=""
 
+## echoes
 BE_VERBOSE_CHATTY=1
-
 function echox() {
     if [ $BE_VERBOSE_CHATTY == 1 ]; then
         echo "$@"
@@ -42,9 +101,9 @@ make_extra_args=( )
 #
 ## Refuse to run at $HOME.
 #
-if [ "$here" = "$HOME" ]; then
+if [ "$there" = "$HOME" ]; then
     echo
-    echo "~~ Dude: You're at \$HOME ($here), ain't doing nothing, cheers."
+    echo "~~ Dude: We're at \$HOME ($there), ain't doing no work here, rest, cheers."
     echo
     exit 1
 elif [ "x$builddir" = "x" ]; then
@@ -326,10 +385,16 @@ echox "+~~> popd !" &&
 
 
 echo
-echo "+- List of executable files under '$here/$builddir' :"
+echo "+- List of executable files under '$there/$builddir' :"
 echo "|"
 
-  find "$builddir/" \
+  #find "$builddir/" \
+  # ^ this was fine, but having built binary paths be displayed _relative from_
+  #   the dir. this script was launched is quite useful.
+
+  # Just back to whence we came and search.
+  cd "$here" &&
+  find "$reldots/$builddir" \
     \( -type d -name CMakeFiles -prune \) \
     -o -type f \
          \(    \
