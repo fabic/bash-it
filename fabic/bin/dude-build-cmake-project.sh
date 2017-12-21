@@ -84,10 +84,6 @@ then
     esac
   done
 
-  # Less echos for rebuilds, see Bash function 'echox'
-  [ "x$do_rebuild" != "xyes" ] &&
-    BE_VERBOSE_CHATTY=0
-
   # Consume extra. arguments for CMake, until we hit the '--' separator.
   while [ $# -gt 0 ];
   do
@@ -111,8 +107,6 @@ then
     [ "$arg" == "--" ] && break
   done
 
-  echox "| Ok, CMake generator -G $cmake_generator"
-
   if [ $# -gt 0 ]; then
       echo "+-"
       echo "| WARNING: extraneous arguments were provided (neither for CMake nor Ninja); these will be ignored :"
@@ -120,6 +114,13 @@ then
       echo "+-"
   fi
 fi
+
+
+# Less echos for rebuilds, see Bash function 'echox'
+[ "x$do_rebuild" != "xyes" ] &&
+  BE_VERBOSE_CHATTY=0
+
+echox "| Ok, CMake generator -G $cmake_generator"
 
 
 ## local/ FHS-style target installation dir.
@@ -320,31 +321,30 @@ fi
 
 
 # move out of BUILD/ (return to previous dir.)
-echo "+~~> popd !" &&
-popd >/dev/null
+echox "+~~> popd !" &&
+  popd >/dev/null
 
 
-echox "|"
-echo "| List of executable files under '$here/$builddir' :"
-echox "|"
+echo
+echo "+- List of executable files under '$here/$builddir' :"
+echo "|"
 
-echo &&
-    find "$builddir/" \
-      \( -type d -name CMakeFiles -prune \) \
-      -o -type f \
-           \(    \
-               -perm -a+x  \
-            -o -name \*.a  \
-            -o -name \*.ko \
-            -o -name \*.la \
-            -o -name \*.so \
-           \) \
-      -print0 | \
-        xargs -0r ls -ltrh | \
-          sort -k9         | \
-          sed -e 's@^@|    &@'
+  find "$builddir/" \
+    \( -type d -name CMakeFiles -prune \) \
+    -o -type f \
+         \(    \
+             -perm -a+x  \
+          -o -name \*.a  \
+          -o -name \*.ko \
+          -o -name \*.la \
+          -o -name \*.so \
+         \) \
+    -print0 | \
+      xargs -0r ls -ltrh | \
+        sort -k9         | \
+        sed -e 's@^@|    &@'
 
-echox "|"
+echo "|"
 echo "+-- $0 : FINISHED, exit status: $retv"
 echox
 
