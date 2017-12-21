@@ -17,9 +17,9 @@ if [ $# -lt 1 ]; then
   echo
   echo "Find source code files and grep into these..."
   echo
-  echo "Usage: $0 <grep_arguments>... -- <find_arguments>..."
+  echo "Usage: `basename $0` <grep_arguments>... -- <find_arguments>..."
   echo
-  echo "Example: $0 FrontendAction -- clang/include/ clang/lib llvm/include"
+  echo "Example: `basename $0` FrontendAction -- clang/include/ clang/lib llvm/include"
   echo
   exit 127
 fi
@@ -52,7 +52,7 @@ findargs=( "$@" )
 findcmd=(
   find
     "${findargs[@]}"
-    \( -type d \( -iregex '.+/\..+$' -o -name 'CMakeFiles' \) -prune \)
+    \( -type d \( -name '.?*' -o -name 'CMakeFiles' \) \) -prune
     -o -type f
        \(
          -regextype egrep -iregex "$regex"

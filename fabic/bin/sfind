@@ -7,9 +7,9 @@ if [ $# -lt 1 ]; then
   echo "+- $0 $@"
 	echo "| Find source code files"
   echo "|"
-	echo "| Usage: $0 [<prefix_find_arguments>... --] <suffix_find_arguments>..."
+	echo "| Usage: `basename $0` [<prefix_find_arguments>... --] <suffix_find_arguments>..."
   echo "|"
-	echo "| Example: $0 clang/include/ clang/lib llvm/include -- -name '*.c'"
+	echo "| Example: `basename $0` clang/include/ clang/lib llvm/include -- -name '*.c'"
   echo "+-"
 	echo
 	exit 127
@@ -17,7 +17,8 @@ fi
 
 # egrep compatible regular expression, which `find` understand
 # thanks to `-regextype egrep`.
-regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x|cmake)$"
+#regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x|cmake)$"
+regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
 
 leftargs=()
 rightargs=()
@@ -48,16 +49,19 @@ findcmd=(
           -o \( -type d \( -name 'CMakeFiles' \) \)
           -o \( -type f \( -name '*~' -o -iregex '.*\.(old|bak)$' \) \)
         \) -prune
-        -o -type f
-           \(
-             -iregex "$regex"
-             -o -name "CMakeLists.txt"
+        -o \(
+             -type f
+               \(
+                 -iregex "$regex"
+                 -o -name "CMakeLists.txt"
+               \)
            \)
     "${rightargs[@]}"
 )
 
-"${findcmd[@]}" \
-  | sed -e 's@^\./@@'
+"${findcmd[@]}"
+  # | sed -e 's@^\./@@'
+  # ^ piping output through sed have us miss a bad exit status of `find`.
 
 retv=$?
 if [ $retv -gt 0 ]; then

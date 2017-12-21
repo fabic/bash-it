@@ -58,13 +58,16 @@ reldots=""
   done
 
   # Strip off the leading '/'
-  reldots="${reldots%%/}"
+  # DON'T (!)
+  #reldots="${reldots%%/}"
 #endif
 
 
 # Quickfix /me want Clang generally.
-[ -z ${CC+x}  ] && type -p clang >/dev/null   && CC=clang    && echo "| \$CC was set to $CC"
-[ -z ${CXX+x} ] && type -p clang++ >/dev/null && CXX=clang++ && echo "| \$CXX was set to $CXX"
+[ -z ${CC+x}  ] && type -p clang >/dev/null   &&
+  export CC=clang    && echo "| \$CC was set to $CC"
+[ -z ${CXX+x} ] && type -p clang++ >/dev/null &&
+  export CXX=clang++ && echo "| \$CXX was set to $CXX"
 
 
 # Target directory for out-of-tree build :
@@ -85,6 +88,8 @@ function echox() {
 # Defaults to "no" if build/CMakeCache.txt exists.
 [ -e "$there/$builddir/CMakeCache.txt" ] &&
   do_rebuild="no" || do_rebuild="yes"
+
+do_pause=0
 
 cmake_binary="$( type -p cmake )"
 ninja_binary="$( type -p ninja )"
@@ -136,6 +141,10 @@ then
     "rebuild")
         do_rebuild="yes"
         echo "| Rebuild asked (will remove the build dir. '$builddir')"
+        shift
+        ;;
+    "pause") # TODO: impl. "pause=X"
+        do_pause=1
         shift
         ;;
     *) # Stop once we fing something we don't recognize.
@@ -307,7 +316,6 @@ fi
 
 echo
 
-
 #
 ## RUNNING CMake !
 #
@@ -323,7 +331,14 @@ if [ $retv -gt 0 ]; then
 fi
 
 
-#read -p "CMake completed, proceed with actual build (make/ninja) ?"
+# PAUSE ?
+if [ $do_pause -eq 1 ]; then
+  echo "~~ PAUSE 1.5s ~~"
+  sleep 1.5
+# TODO: impl. arg. "pause=2"
+elif [ $do_pause -eq 2 ]; then
+  read -p "CMake completed, proceed with actual build (make/ninja) ?"
+fi
 
 
 if [ "$cmake_generator" == "Ninja" ];
@@ -394,7 +409,7 @@ echo "|"
 
   # Just back to whence we came and search.
   cd "$here" &&
-  find "$reldots/$builddir" \
+  find "$reldots$builddir" \
     \( -type d -name CMakeFiles -prune \) \
     -o -type f \
          \(    \
