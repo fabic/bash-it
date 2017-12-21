@@ -106,6 +106,40 @@ function w() {
     done
 }
 
+# Check that W is not already defined, just in case.
+if true; then
+    type_of_w="`type -t W`"
+    if [ ! -z "$type_of_w" ]; then
+        echo "~~> WARNING: ${BASH_SOURCE[0]}: \`W\` is already defined (is-a: $type_of_w)."
+        # Display bash function content.
+        if [ "$type_of_w" == "function" ]; then
+            type W | sed -e 's/^/             /'
+        fi
+    fi
+    unset type_of_w
+fi
+
+# Find source code files.
+# Usage: W [<path> ...]
+#   $ W
+#   $ W src include
+#   $ W /usr/include
+function W() {
+    local locations=( "$@" )
+    local regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|s|rs|js|py|php|rb)$"
+    local find_args=(
+        "${locations[@]}"
+        #-type d \( -name .git -o -name .svn \) -prune
+        # Ignore all dotted dirs., CMakeFiles/ sub-directories.
+        -type d \( -name '.?*' -o -name "CMakeFiles" \) -prune
+          -o \( -type f -regextype egrep -iregex "$regex" \) \
+            -print
+      )
+    find "${find_args[@]}" \
+        | sed -e 's@^\./*@@'
+          # ^ Strip the eventual leading './' (which is boring).
+}
+
 # Remove the 'v' shell alias that was set in `aliases/available/vim.aliases.bash`
 [ "`type -t v`" == "alias" ] && unalias v
 
