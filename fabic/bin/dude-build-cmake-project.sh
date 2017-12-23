@@ -14,6 +14,14 @@ there="$here"
 #  script display files _relative from the original $here directory).
 reldots=""
 
+# For `cmake . --graphviz=build-deps.graph.viz`
+graphviz_dotty="$(type -p dotty)"
+graphviz_output_file="_graphviz/dep-graph.dot"
+[ -n "$graphviz_dotty" ] &&
+  graphviz_enabled=1 || graphviz_enabled=0
+
+echo -e "+-- \e[90m\$ \e[97m`basename $0` \e[37m$@\e[0m"
+
 #
 ## Search for a CMakeLists.txt from the current dir.
 ## walking upward in parent directories until one is found.
@@ -65,9 +73,9 @@ reldots=""
 
 # Quickfix /me want Clang generally.
 [ -z ${CC+x}  ] && type -p clang >/dev/null   &&
-  export CC=clang    && echo "| \$CC was set to $CC"
+  export CC=clang    && echo -e "| \e[33m\$CC was set to $CC\e[0m"
 [ -z ${CXX+x} ] && type -p clang++ >/dev/null &&
-  export CXX=clang++ && echo "| \$CXX was set to $CXX"
+  export CXX=clang++ && echo -e "| \e[33m\$CXX was set to $CXX\e[0m"
 
 
 # Target directory for out-of-tree build :
@@ -90,6 +98,7 @@ function echox() {
   do_rebuild="no" || do_rebuild="yes"
 
 do_pause=0
+do_break=0
 
 cmake_binary="$( type -p cmake )"
 ninja_binary="$( type -p ninja )"
@@ -141,6 +150,10 @@ then
     "rebuild")
         do_rebuild="yes"
         echo "| Rebuild asked (will remove the build dir. '$builddir')"
+        shift
+        ;;
+    "break")
+        do_break=1
         shift
         ;;
     "pause") # TODO: impl. "pause=X"
@@ -216,7 +229,6 @@ echox "| Entering '$there/'."
 pushd "$there" >/dev/null
 
 echox
-echox "+-- $0 $@"
 echox "|"
 echox "| Current dir. : `pwd`"
 echox "|"
@@ -224,7 +236,10 @@ echox "|"
 
 # CMAKE_INSTALL_PREFIX
 [ ! -z "$localdir" ] &&
-  cmake_extra_args=( ${cmake_extra_args[@]} -DCMAKE_INSTALL_PREFIX="$localdir")
+  cmake_extra_args=(
+    -DCMAKE_INSTALL_PREFIX="$localdir"
+    "${cmake_extra_args[@]}"
+    )
 
 
 # Print out arguments for both CMake and Make/Ninja.
@@ -247,22 +262,35 @@ fi
 
 
 cmake_args=(
-  -G "$cmake_generator"
-  #-DFABIC_LOCAL_DIR="$localdir"
-  #-DCMAKE_BUILD_TYPE=Debug
-  #-DCMAKE_BUILD_TYPE=RelWithDebInfo
-  #-DCMAKE_BUILD_TYPE=MinSizeRel
-  # ^ Leave that to users: Use the default build type that is eventually
-  #   configured by CMakeLists.txt
-  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
   -Wdev
   --warn-uninitialized
   --clean-first
-  "${cmake_extra_args[@]}"
-  ..
+  -G "$cmake_generator"
+  # -DFABIC_LOCAL_DIR="$localdir"
+  # -DCMAKE_BUILD_TYPE=Debug
+  # -DCMAKE_BUILD_TYPE=RelWithDebInfo
+  # -DCMAKE_BUILD_TYPE=MinSizeRel
+  #  ^ Leave that to users: Use the default build type that is eventually
+  #    configured by CMakeLists.txt
+  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 )
 
-make_args=( "${make_extra_args[@]}" )
+# Graphviz
+if [ $graphviz_enabled -gt 0 ]; then
+  echox "| Graphviz enabled. \`dotty\` is ${graphviz_dotty}"
+  echox "|  \` Run: dotty '$graphviz_output_file'"
+  cmake_args=( "${cmake_args[@]}"
+    --graphviz="$graphviz_output_file"
+   )
+fi
+
+# Append user-provided arguments last.
+cmake_args=( "${cmake_args[@]}"
+  "${cmake_extra_args[@]}"
+  ..
+ )
+
+ make_args=( "${make_extra_args[@]}" )
 
 
 # Remove build/ subdir. only if no command line
@@ -294,10 +322,10 @@ fi
 
 echox "|"
 echox "+-- Running CMake  -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -+"
-echo "+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -+"
-echo "|   $cmake_binary \\"
-echo "|     ${cmake_args[@]}"
-echo "+-- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -+"
+echo    "+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -+"
+echo -e "|\e[97m   $cmake_binary \\"
+echo -e "|     ${cmake_args[@]} \e[0m"
+echo    "+-- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -+"
 
 if [ $BE_VERBOSE_CHATTY -eq 1 ]; then
     echox "|   » CMAKE_EXPORT_COMPILE_COMMANDS=ON"
@@ -341,7 +369,17 @@ elif [ $do_pause -eq 2 ]; then
 fi
 
 
-if [ "$cmake_generator" == "Ninja" ];
+# BREAK ? (exit script here, i.e. do not run make/ninja).
+if [ $do_break -gt 0 ]; then
+  echo
+  echo    "+-"
+  echo -e "| \e[93m ~~ BREAK (not running Make/Ninja) ~~\e[0m"
+  echo    "|"
+  echo -e "|   \e[97mcmake --build build/ [--target <target>]\e[0m"
+  echo    "|"
+  echo -e "|   \e[97mcmake --build build/ --target help\e[0m"
+  echo    "+-"
+elif [ "$cmake_generator" == "Ninja" ];
 then
   echox
   echox "+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -+"
@@ -424,8 +462,25 @@ echo "|"
         sort -k9         | \
         sed -e 's@^@|    &@'
 
+# Tell user how to run `dotty`.
+if [ $graphviz_enabled -gt 0 ] && [ $BE_VERBOSE_CHATTY -gt 0 ]; then
+  echo "+-"
+  echo -e "| \e[34;7mGraphviz dependency graph generation :\e[0m"
+  echo "|"
+  if [ -e "$builddir/$graphviz_output_file" ]; then
+    echo "|"
+    echo "|   - dotty: $graphviz_dotty"
+    echo "|   - File: '$graphviz_output_file'"
+    echo "|   - generate with, for ex.:"
+    echo "|"
+    echo -e "|       \e[92mdotty '$builddir/$graphviz_output_file'\e[0m"
+  else
+    echo -e "| \e[91m \` ERROR: Graphviz was enabled but the output file '$graphviz_output_file' does not exist or something -_- \e[0m"
+  fi
+fi
+
 echo "|"
-echo "+-- $0 : FINISHED, exit status: $retv"
+echo -e "+-- $0 : \e[7mFINISHED\e[0m, exit status: \e[97m$retv\e[0m"
 echox
 
 exit $retv
