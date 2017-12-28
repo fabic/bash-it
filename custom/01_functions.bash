@@ -29,7 +29,9 @@ pathappend () {
         export $PATHVARIABLE="${!PATHVARIABLE:+${!PATHVARIABLE}:}$1"
 }
 
-# Open Vim in the specified directory, by ch. dir. into it first.
+# “Vim in dir.” :
+#    Open Vim in the specified directory,
+#    by ch. dir. into it first.
 # F.2011-11-22
 vin() {
     local dest="$1"
@@ -39,7 +41,7 @@ vin() {
     popd
 }
 
-# `w`
+# `w` : Quite locate file(s).
 #
 # Locate files in arguments :
 #   1) exists in/from the current directory ;
@@ -119,32 +121,47 @@ if true; then
     unset type_of_w
 fi
 
-# Find source code files.
+## `W` : Find source code files.
+#
 # Usage: W [<path> ...]
+#
+# Examples :
 #   $ W
 #   $ W src include
 #   $ W /usr/include
+#
+# Note that arguments are all passed to `find` _before_
+# the filter expressions => hence these may be other things
+# than just a list of locations to search for.
 function W() {
     local locations=( "$@" )
+    # Extended-grep compatible reg. ex.
     local regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|s|rs|js|py|php|rb)$"
     local find_args=(
         "${locations[@]}"
-        #-type d \( -name .git -o -name .svn \) -prune
-        # Ignore all dotted dirs., CMakeFiles/ sub-directories.
+        # Ignore all dotted '.xxx/' dirs.
+        #   & CMakeFiles/ sub-directories.
         -type d \( -name '.?*' -o -name "CMakeFiles" \) -prune
           -o \( -type f -regextype egrep -iregex "$regex" \) \
             -print
       )
-    find "${find_args[@]}" \
-        | sed -e 's@^\./*@@'
+    find "${find_args[@]}"
+        #| sed -e 's@^\./*@@'
           # ^ Strip the eventual leading './' (which is boring).
+          # ^ FIXME: This shadows `find` exit status (we can't catch errors).
 }
 
 # Remove the 'v' shell alias that was set in `aliases/available/vim.aliases.bash`
 [ "`type -t v`" == "alias" ] && unalias v
 
+# `v` ~ quick vim open file(s) searched with `w`.
 function v() {
     vim $(w "$@")
+}
+
+# `V` (capital 'V') ~ Quick Vim open source code files, searched with `W`.
+function V() {
+    vim $(W "$@")
 }
 
 # Fcj.2014-03-04
