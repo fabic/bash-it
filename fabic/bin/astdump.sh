@@ -13,7 +13,7 @@ clang_cmd=( clang++
     -fparse-all-comments
     -Wall
     -pedantic
-    -Weverything
+    #-Weverything
     # ^ http://clang.llvm.org/docs/UsersManual.html#enabling-all-diagnostics
     -Wmissing-field-initializers
     -Wnon-virtual-dtor
@@ -27,11 +27,9 @@ clang_cmd=( clang++
     -femit-all-decls
   )
 
-# Auto. add an eventual ./include/ directory.
-if [ -d include ]; then
-  echo "+- Adding -Iinclude found in current directory '$here'."
-  clang_cmd=( "${clang_cmd[@]}" -Iinclude )
-fi
+# If <> 0 then we won't add -Iinclude if such a directory exists
+# in the current dir.
+noautoinc=0
 
 clang_args=()
 
@@ -92,11 +90,21 @@ if [ $# -gt 0 ]; then
       "verbose"|v)
         clang_cmd=( "${clang_cmd[@]}" -v -Wp,-v -Wl,--verbose )
         ;;
+      "noautoinc")
+        noautoinc=1
+        ;;
     esac
   done
 # No arguments => default invocation.
 else
   clang_cmd=( "${clang_cmd[@]}" -Xclang -ast-dump -fsyntax-only )
+fi
+
+
+# Auto. add an eventual ./include/ directory.
+if [ -d include ] && [ $noautoinc -eq 0 ]; then
+  echo "+- Adding -Iinclude found in current directory '$here'."
+  clang_cmd=( "${clang_cmd[@]}" -Iinclude )
 fi
 
 
