@@ -10,7 +10,7 @@
 
 # egrep compatible regular expression, which `find` understand
 # thanks to `-regextype egrep`
-regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x|cmake)$"
+regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
 
 # Usage note if no arguments :
 if [ $# -lt 1 ]; then
@@ -70,6 +70,7 @@ echo "|   xargs -0r ${grepargs[@]}"
 echo
 
 "${findcmd[@]}" |
+  sort -z |
   xargs -0r \
     grep "${grepargs[@]}"
 

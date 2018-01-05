@@ -17,8 +17,7 @@ reldots=""
 # For `cmake . --graphviz=build-deps.graph.viz`
 graphviz_dotty="$(type -p dotty)"
 graphviz_output_file="_graphviz/dep-graph.dot"
-[ -n "$graphviz_dotty" ] &&
-  graphviz_enabled=1 || graphviz_enabled=0
+graphviz_enabled=0
 
 echo -e "+-- \e[90m\$ \e[97m`basename $0` \e[37m$@\e[0m"
 
@@ -160,6 +159,11 @@ then
         do_pause=1
         shift
         ;;
+    "graphviz")
+      [ -n "$graphviz_dotty" ] &&
+          graphviz_enabled=1 || graphviz_enabled=0
+        shift
+        ;;
     *) # Stop once we fing something we don't recognize.
         break
     esac
@@ -274,6 +278,9 @@ cmake_args=(
   #    configured by CMakeLists.txt
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 )
+
+# Don't !
+[ "$do_rebuild" == "yes" ] && graphviz_enabled=0
 
 # Graphviz
 if [ $graphviz_enabled -gt 0 ]; then

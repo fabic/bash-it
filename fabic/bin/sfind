@@ -3,6 +3,7 @@
 # FC.2014-09-24 fabic.net
 
 if [ $# -lt 1 ]; then
+  (
 	echo
   echo "+- $0 $@"
 	echo "| Find source code files"
@@ -12,12 +13,11 @@ if [ $# -lt 1 ]; then
 	echo "| Example: `basename $0` clang/include/ clang/lib llvm/include -- -name '*.c'"
   echo "+-"
 	echo
-	exit 127
+  ) >&2
 fi
 
 # egrep compatible regular expression, which `find` understand
 # thanks to `-regextype egrep`.
-#regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x|cmake)$"
 regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
 
 leftargs=()
@@ -44,17 +44,18 @@ findcmd=(
   find
     "${leftargs[@]}"
         -regextype egrep
-        \(
+        \( \(
              -name '.?*'
           -o \( -type d \( -name 'CMakeFiles' \) \)
           -o \( -type f \( -name '*~' -o -iregex '.*\.(old|bak)$' \) \)
-        \) -prune
+        \) -prune \)
         -o \(
              -type f
                \(
                  -iregex "$regex"
                  -o -name "CMakeLists.txt"
                \)
+             -print
            \)
     "${rightargs[@]}"
 )
@@ -65,11 +66,13 @@ findcmd=(
 
 retv=$?
 if [ $retv -gt 0 ]; then
+  (
   echo
   echo "| FAIL: exit status of \`find ...\` is non-zero ;"
   echo "|        \` command was :"
   echo "|"
   echo "|   ${findcmd[@]}"
+  ) >&2
 fi
 
 exit $retv

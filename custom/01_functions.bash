@@ -41,6 +41,12 @@ vin() {
     popd
 }
 
+# x == xdg-open
+# ^ I never use 'X' for anything from the command line, like e.g. x=...
+function x() {
+    xdg-open "$@"
+}
+
 # `w` : Quite locate file(s).
 #
 # Locate files in arguments :
@@ -109,7 +115,7 @@ function w() {
 }
 
 # Check that W is not already defined, just in case.
-if true; then
+if false; then
     type_of_w="`type -t W`"
     if [ ! -z "$type_of_w" ]; then
         echo "~~> WARNING: ${BASH_SOURCE[0]}: \`W\` is already defined (is-a: $type_of_w)."
@@ -133,22 +139,26 @@ fi
 # Note that arguments are all passed to `find` _before_
 # the filter expressions => hence these may be other things
 # than just a list of locations to search for.
+#
+# Files are returned sorted by modification time (most recent first).
 function W() {
     local locations=( "$@" )
     # Extended-grep compatible reg. ex.
     local regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|s|rs|js|py|php|rb)$"
     local find_args=(
         "${locations[@]}"
-        # Ignore all dotted '.xxx/' dirs.
-        #   & CMakeFiles/ sub-directories.
-        -type d \( -name '.?*' -o -name "CMakeFiles" \) -prune
-          -o \( -type f -regextype egrep -iregex "$regex" \) \
-            -print
+             # Ignore all dotted '.xxx/' dirs.
+             #   & CMakeFiles/ sub-directories.
+             \( -type d \( -name '.?*' -o -name "CMakeFiles" \) -prune \)
+          -o \( -type f \( -regextype egrep -iregex "$regex" \) -print \)
       )
-    find "${find_args[@]}"
-        #| sed -e 's@^\./*@@'
-          # ^ Strip the eventual leading './' (which is boring).
-          # ^ FIXME: This shadows `find` exit status (we can't catch errors).
+      ( find "${find_args[@]}" ||
+          (>&2 echo -e "\e[31;1;7m WARNING: \e[0;91m Bad \`find\` exit status: \e[97m$?\e[0m")
+      ) | sed -e 's@^\./*@@' \
+        | xargs -r -d\\n ls -1t
+        # ^ Strip the eventual leading './' (which is boring).
+        # ^ Sort: most recently modified files first.
+      # ^ NOTE: Pipes do shadow `find` exit status (we can't catch errors).
 }
 
 # Remove the 'v' shell alias that was set in `aliases/available/vim.aliases.bash`
