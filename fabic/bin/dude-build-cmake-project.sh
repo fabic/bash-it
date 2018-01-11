@@ -27,6 +27,7 @@ echo -e "+-- \e[90m\$ \e[97m`basename $0` \e[37m$@\e[0m"
 #
 # FIXME: WTF!? Strange Bash syntax error here with this `if ...`: "unexpected EOF" O_O`
 # FIXME:  ` altered the loop so it's okay now.
+#
 #if [ ! -e "CMakeLists.txt" ]; then
   #echo "+- Current dir. '$there' has no CMakeLists.txt : Moving up a level to parent dir."
   while true; do
@@ -35,7 +36,12 @@ echo -e "+-- \e[90m\$ \e[97m`basename $0` \e[37m$@\e[0m"
       [ "$there" != "$here" ] &&
         echo "| Found CMakeLists at dir. '$there'." &&
         echo "|  \` we were in '$here' initially."
-      break
+      # Don't stop at the first .git dir/file found: search for the last .git
+      # whose parent has no CMakeLists.
+      [ -f "$there/../CMakeLists.txt" ] &&
+        echo "|  \` parent dir. also has a CMakeLists.txt," &&
+        echo "|     => continuing search further upward..." ||
+          break # <-- FOUND (!)
     # .git may be files, which indicate we're in a Git submodule => continue.
     elif [ -f .git ]; then
       echo "| Reached dir. '$there' which has a .git file (most certainly this is a Git submodule ; CONTINUING SEARCH."
@@ -79,6 +85,12 @@ echo -e "+-- \e[90m\$ \e[97m`basename $0` \e[37m$@\e[0m"
 
 # Target directory for out-of-tree build :
 builddir="build"
+
+# Defaults to empty string => do not pass -DCMAKE_BUILD_TYPE=...
+# argument to CMake (user may have its own default,
+# eventually set from its CMakeLists.txt)
+# ~> This is set to "Release" if special arg. 'release' is provided.
+buildtype=""
 
 # FHS-like local/ dir.
 localdir=""
@@ -149,6 +161,14 @@ then
     "rebuild")
         do_rebuild="yes"
         echo "| Rebuild asked (will remove the build dir. '$builddir')"
+        shift
+        ;;
+    "release")
+        builddir="rel-build"
+        buildtype="Release"
+        echo "|"
+        echo -e "| \e[30;42m RELEASE BUILD REQUESTED \e[0m"
+        echo "|"
         shift
         ;;
     "break")
@@ -238,7 +258,7 @@ echox "| Current dir. : `pwd`"
 echox "|"
 
 
-# CMAKE_INSTALL_PREFIX
+# Auto. CMAKE_INSTALL_PREFIX if ./local/ directory exists.
 [ ! -z "$localdir" ] &&
   cmake_extra_args=(
     -DCMAKE_INSTALL_PREFIX="$localdir"
@@ -276,8 +296,16 @@ cmake_args=(
   # -DCMAKE_BUILD_TYPE=MinSizeRel
   #  ^ Leave that to users: Use the default build type that is eventually
   #    configured by CMakeLists.txt
+  #  ^ EDIT: see below if $buildtype non-empty.
   -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
 )
+
+# Set CMAKE_BUILD_TYPE if non-empty.
+[ ! -z "$buildtype" ] &&
+  cmake_extra_args=(
+    -DCMAKE_BUILD_TYPE="$buildtype"
+    "${cmake_extra_args[@]}"
+    )
 
 # Don't !
 [ "$do_rebuild" == "yes" ] && graphviz_enabled=0
@@ -382,9 +410,9 @@ if [ $do_break -gt 0 ]; then
   echo    "+-"
   echo -e "| \e[93m ~~ BREAK (not running Make/Ninja) ~~\e[0m"
   echo    "|"
-  echo -e "|   \e[97mcmake --build build/ [--target <target>]\e[0m"
+  echo -e "|   \e[97mcmake --build $builddir/ [--target <target>]\e[0m"
   echo    "|"
-  echo -e "|   \e[97mcmake --build build/ --target help\e[0m"
+  echo -e "|   \e[97mcmake --build $builddir/ --target help\e[0m"
   echo    "+-"
 elif [ "$cmake_generator" == "Ninja" ];
 then

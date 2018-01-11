@@ -208,16 +208,6 @@ export SHORT_HOSTNAME=$(hostname -s)
 source $BASH_IT/bash_it.sh
 
 
-# FABIC: gVim forks a shell in a 'dumb' terminal that do not comprehend colors,
-#        hence we're setting up a simple PS1/2 prompt here.
-if [ "$TERM" == "dumb" ]; then
-  echo "# FYI: dumb terminal detected (\$TERM='$TERM') => adjusting prompt (w/o colors)."
-  PS1="(\t) [\u@\H] \j \w $ "
-  PS2=''
-  PS4='+ '
-fi
-
-
 # FABIC/2011-08-16 : Prompt color, slightly modified from BLFS.
 # Setup a red prompt for root and a green one for users.
 # Gentoo's PS1 : \[\033[01;32m\]\u@\h\[\033[01;34m\] \w \$\[\033[00m\]
@@ -358,6 +348,18 @@ fi
 # `~/bin` shall come last so that I can override about anything.
 # ( Remember that you typically symlink `bash-it/fabic/bin/` as `~/bin/` )
 [ -d ~/bin ] && pathprepend ~/bin
+
+
+# FABIC: gVim forks a shell in a 'dumb' terminal that do not comprehend colors,
+#        hence we're setting up a simple PS1/2 prompt here.
+if [ "$TERM" == "dumb" ]; then
+  echo "# FYI: dumb terminal detected (\$TERM='$TERM') => adjusting prompt (w/o colors)."
+  [ -n "$PROMPT_COMMAND" ] && unset PROMPT_COMMAND
+  PS1="(\t) [\u@\H] \j \w $ "
+  PS2=''
+  PS4='+ '
+  echo "#      \`-> PS1='$PS1'"
+fi
 
 
 # FABIC: Print out some environment variables :

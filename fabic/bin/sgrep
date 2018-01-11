@@ -61,13 +61,15 @@ findcmd=(
     -print0
 )
 
-echo "+-- $0 : BEGIN."
-echo "|"
-echo "| Running :"
-echo "|"
-echo "| ${findcmd[@]} \\"
-echo "|   xargs -0r ${grepargs[@]}"
-echo
+(
+  echo "+-- $0 : BEGIN."
+  echo "|"
+  echo "| Running :"
+  echo "|"
+  echo "| ${findcmd[@]} \\"
+  echo "|   xargs -0r ${grepargs[@]}"
+  echo
+) >&2
 
 "${findcmd[@]}" |
   sort -z |
@@ -76,8 +78,8 @@ echo
 
 retv=$?
 
-echo
-echo "+-- $0 : END, exit status: $retv"
+( echo
+  echo "+-- $0 : END, exit status: $retv" ) >&2
 
 exit $retv
 
