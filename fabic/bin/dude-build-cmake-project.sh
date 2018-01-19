@@ -158,12 +158,12 @@ then
         #echox "|   -> version `ninja --version`"
         shift
         ;;
-    "rebuild")
+    rebuild|reb)
         do_rebuild="yes"
         echo "| Rebuild asked (will remove the build dir. '$builddir')"
         shift
         ;;
-    "release")
+    release|rel)
         builddir="rel-build"
         buildtype="Release"
         echo "|"
@@ -414,6 +414,36 @@ if [ $do_break -gt 0 ]; then
   echo    "|"
   echo -e "|   \e[97mcmake --build $builddir/ --target help\e[0m"
   echo    "+-"
+
+# CMake is able to invoke the correct build tool (Ninja/Make) by itself.
+elif [ true ];
+then
+  build_cmd=( cmake --build "$builddir" "${make_extra_args[@]}" )
+  echox
+  echox "+-- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -- -+"
+  echox "| cd '$there' &&"
+  echox -e "|\e[93m   ${build_cmd[@]} \e[0m"
+  echox "+-- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -+"
+  echo
+
+  cd "$there" &&
+    time \
+      "${build_cmd[@]}" &&
+  cd -
+
+  retv=$?
+  echox
+  echox "+"
+  echo -e "|\e[2m $\e[22m\e[97m ${build_cmd[@]} \e[0m"
+  if [ $retv -gt 0 ]; then
+      echo -e "|\e[31m    \` Build failed, exit status:\e[1m $retv \e[0m"
+      echo "+-"
+      exit 125
+  fi
+
+  echox "+-- -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -  -+"
+  echox
+
 elif [ "$cmake_generator" == "Ninja" ];
 then
   echox
@@ -437,6 +467,7 @@ then
   echox
   echox "| Ninja finished, ok"
   echox "+-"
+
 elif [ "$cmake_generator" == "Unix Makefiles" ];
 then
   echox
