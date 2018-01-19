@@ -234,6 +234,39 @@ if [ -f ~/.bash_aliases ]; then
 fi
 
 
+# FABIC: Start an SSH Agent... (is this fine ?)
+# @link http://unix.stackexchange.com/a/90869
+# ( See also the SSH_ASKPASS setup somewhere here ).
+if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ] ; then
+    echo "# FYI: Dude, starting ssh-agent from ${BASH_SOURCE[0]}"
+    echo "# BTW: This may _not_ be what you want (!!)"
+    eval `ssh-agent -s`
+    # TODO: ^ check exit status or sthg ?
+    #ssh-add
+    echo
+fi
+
+# SSH agent: If the agent is running then we're on the "local" machine (probably
+#            not in a remote shell) => check that the agent has at least one key
+#            and add it if not.
+if [ -n "$SSH_AUTH_SOCK" ] && [ $SSH_AGENT_PID -gt 0 ]; then
+  if ! ssh-add -l >/dev/null 2>&1 ; then
+    echo -e "# \e[31m (!!)\e[0m SSH agent has no keys."
+    if [ -r ~/.ssh/id_rsa ]; then
+      echo -e "# \e[31m   \`\e[0m Adding key ~/.ssh/id_rsa"
+      if ! ssh-add ~/.ssh/id_rsa ; then
+        echo -e "# \e[31m    \` (!!!)\e[0m WARNING: \`ssh-add ~/.ssh/id_rsa\` failed (!)"
+      fi
+    else
+      echo -e "# \e[31m   \` (!)\e[0m Found no ~/.ssh/id_rsa key."
+    fi
+  else
+    echo -e "# SSH agent has key(s):"
+    ssh-add -l | sed -e 's/^/# - /'
+  fi
+fi
+
+
 # SSH: Seahorse wrapper script for “SSH ask pass” instrumentation, which
 #      hardly ever works as expected btw.
 # FABIC/2014-08-18 : temp. here (shall I set this in ~/.xinit ot xsession ?
@@ -302,18 +335,6 @@ fi
 # PHP / Composer.phar "globally" installed stuff, e.g.
 #   `` composer.phar global require fabpot/php-cs-fixer `` :
 [ -d ~/.composer/vendor/bin ] && pathprepend ~/.composer/vendor/bin
-
-
-# FABIC: Start an SSH Agent... (is this fine ?)
-# @link http://unix.stackexchange.com/a/90869
-# ( See also the SSH_ASKPASS setup somewhere here ).
-if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ] ; then
-    echo "# FYI: Dude, starting ssh-agent from ${BASH_SOURCE[0]}"
-    echo "# BTW: This may _not_ be what you want (!!)"
-    eval `ssh-agent -s`
-    #ssh-add
-    echo
-fi
 
 # MacPorts installs its stuff there.
 [ -d /opt/local/bin ]  && pathprepend /opt/local/bin
