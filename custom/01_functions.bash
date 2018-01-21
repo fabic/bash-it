@@ -174,6 +174,11 @@ function V() {
     vim $(W "$@")
 }
 
+# `vv` : Open vim with the two most recently modified files of a Git subtree.
+function vv() {
+    v -O $(git ls-files | xargs -r -d\\n ls -1t | head -n2)
+}
+
 # Fcj.2014-03-04
 function vimdiff_cycle()
 {

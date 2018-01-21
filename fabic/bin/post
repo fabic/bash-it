@@ -43,19 +43,28 @@ echo
 ( xclip -o -selection clipboard && echo ) | sed -e 's/^$/    /' | tee -a "$postfile"
 ( xclip -o -selection secondary && echo ) | sed -e 's/^$/    /' | tee -a "$postfile"
 
-vim "$postfile"
-retv=$?
+# Perform an immediate `git add` through the Fugitive plugin.
+if true; then
+  vim -c ':Gwrite' "$postfile"
+else
+  vim "$postfile"
+fi
 
+retv=$?
 if [ $retv -gt 0 ]; then
   echo "WARN: Vim exited with status code $retv (stopping here)."
   exit 3
 fi
 
 # Commit file if non-empty, and git push.
-if [ ! -s "$postfile" ]; then
+if [ ! -s "$postfile" ];
+then
   echo "File '$postfile' is empty => we're not committing changes."
-  rm -v "$postfile"
-else
+  echo -e "\e[31m\` Removing empty file\e[0m '\e[93m$postfile\e[0m'."
+  rm -v "$postfile" ||
+    echo -e "\e[31m  \` FAILED (!)\e[0m"
+elif false;
+then
   # Force Jekyll to rebuild the homepage.
   touch index.html
 
