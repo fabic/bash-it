@@ -101,25 +101,54 @@ else
 fi
 
 
-# Auto. add an eventual ./include/ directory.
+# Infer include directories.
 if [ $noautoinc -eq 0 ];
 then
 
-  if [ -d local/include ]; then
-    echo "+- Adding -Ilocal/include found in current directory '$here'."
-    clang_cmd=( "${clang_cmd[@]}" -Ilocal/include )
-    # Admittedly useless...
-    [ -d local/lib ] && clang_cmd=( "${clang_cmd[@]}" -Llocal/lib )
-  fi
+  # Find out what are the hard-coded compiler headers search paths:
+  compiler_inc_paths=( $(clang++ -Wp,-v -x c++ - -fsyntax-only < /dev/null 2>&1 | \
+                           sed -e '/^#include <...>/,/^End of search/{ //!b };d') )
 
+  echo "| Compiler default search paths are :"
+  echo "|   ${compiler_inc_paths[@]}"
+  echo "+-"
+
+  # Project-scope include/ dir.
   if [ -d include ]; then
     echo "+- Adding -Iinclude found in current directory '$here'."
     clang_cmd=( "${clang_cmd[@]}" -Iinclude )
+  # If project has no include/ dir. then we assume headers reside along
+  # their impl. sources into a src/ subdir.
   elif [ -d src ]; then
     echo "+- Current dir. has no 'include/' subdir., but found 'src/' => Adding -Isrc."
     clang_cmd=( "${clang_cmd[@]}" -Isrc )
   fi
 
+  # Project may have a local/ FHS-like subdir.
+  if [ -d local/include ]; then
+    echo "+- Adding -Ilocal/include found in current directory '$here'."
+    clang_cmd=( "${clang_cmd[@]}" -Ilocal/include )
+    # Admittedly useless...
+    # + compiler warns us that it isn't used.
+    false && [ -d local/lib ] && clang_cmd=( "${clang_cmd[@]}" -Llocal/lib )
+  fi
+
+  # Boost C++
+  if [ ! -z "$BOOSTROOT" ]; then
+    echo "+- Boost C++ : Got \$BOOSTROOT = '$BOOSTROOT'"
+    if [ -e "$BOOSTROOT/include/boost/config.hpp" ]; then
+      if [[ " ${compiler_inc_paths[@]} " =~ " $BOOSTROOT/include " ]]; then
+        echo "| Compiler already has $BOOSTROOT/include as its default search path."
+      else
+        boostincdir="$BOOSTROOT/include"
+        clang_cmd=( "${clang_cmd[@]}" -I "$boostincdir" )
+        echo "| Added -I $boostincdir"
+      fi
+    else
+      echo "| WARNING: Couldn't find Boost header files under $BOOSTROOT (!?)"
+      echo "|          \` IGNORING"
+    fi
+  fi
 fi
 
 # Special invocation with no arguments for Clang =>

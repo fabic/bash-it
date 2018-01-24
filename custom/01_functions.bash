@@ -174,29 +174,21 @@ function V() {
     vim $(W "$@")
 }
 
-# `vv` : Open vim with the two most recently modified files of a Git subtree.
-function vv() {
-    v -O $(git ls-files | xargs -r -d\\n ls -1t | head -n2)
+# `ww [<count>|2]` : Lists the <count> (default 2) most recently modified files
+#                    of a Git subtree.
+function ww() {
+  local count=${1:-2}
+  git ls-files -z |
+    xargs -0r ls -1t |
+      head -n$count
 }
 
-# Fcj.2014-03-04
-function vimdiff_cycle()
-{
-        local filename=""
-        local prev=""
-        for filename in "$@";
-        do
-                if [ "x$prev" = "x" ]; then
-                        prev="$filename"
-                        continue
-                fi
-
-                read -p "--- About to DIFF. $prev AGAINST $filename ; press any key to continue, or Ctrl-C to abort. ---"
-
-                vimdiff "$prev" "$filename"
-
-                prev="$filename"
-        done
+# `vv` : Open G/Vim with the two most recently modified files of a Git subtree.
+#        (arguments are passed to Vim).
+function vv() {
+  local _g=
+  [ ! -z "$DISPLAY" ] && local _g="-g"
+  v $_g -O `ww` "$@"
 }
 
 proxy_unset() {
@@ -251,4 +243,4 @@ function cdp()
     fi
 }
 
-# vi: ft=sh et ts=4 sts=4 sw=4
+# vi: ft=sh et ts=2 sts=2 sw=2
