@@ -389,7 +389,7 @@ if true; then
   for e in SHLVL DISPLAY EDITOR LANG LD_LIBRARY_PATH PATH SSH_CONNECTION SSH_ASKPASS SSH_AUTH_SOCK MANPATH TMUX INCLUDE ;
   do
     if [ ! -z ${!e+x} ]; then
-      echo "   $e = ${!e}"
+      echo -e "   \e[1m$e\e[0m = ${!e}"
     fi
   done
 fi
@@ -401,11 +401,16 @@ if true; then
   NodeJS="$(type -p node || type -p nodejs)"
   JavaC="$(type -p javac)"
   Php="$(type -p php)"
+  Python="$(type -p python)"
   Ruby="$(type -p ruby)"
 
-  for vname in Clang Rust NodeJS JavaC Php Ruby; do
+  for vname in Clang Rust NodeJS JavaC Php Python Ruby ; do
     if [ ! -z "${!vname}" ]; then
-      echo "> $vname is ${!vname}"
+      if [ -L "${!vname}" ]; then
+        echo -e "> \e[94m$vname\e[0m is \e[96m${!vname} \e[39;2m--symlink-to-->\e[22;34m $(readlink -m "${!vname}")\e[0m"
+      else
+        echo -e "> \e[94m$vname\e[0m is \e[34m${!vname}\e[0m"
+      fi
     fi
   done
 
