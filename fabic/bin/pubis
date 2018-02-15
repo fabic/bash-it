@@ -1,0 +1,6 @@
+#!/bin/bash
+#
+# https://askubuntu.com/questions/95910/command-for-determining-my-public-ip
+
+dig +short myip.opendns.com @resolver1.opendns.com
+
