@@ -249,7 +249,7 @@ fi
 # SSH agent: If the agent is running then we're on the "local" machine (probably
 #            not in a remote shell) => check that the agent has at least one key
 #            and add it if not.
-if [ -n "$SSH_AUTH_SOCK" ] && [ $SSH_AGENT_PID -gt 0 ]; then
+if [ -n "$SSH_AUTH_SOCK" ] && [ -n $SSH_AGENT_PID ] && [ $SSH_AGENT_PID -gt 0 ]; then
   if ! ssh-add -l >/dev/null 2>&1 ; then
     echo -e "# \e[31m (!!)\e[0m SSH agent has no keys."
     if [ -r ~/.ssh/id_rsa ]; then
