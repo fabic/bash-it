@@ -9,15 +9,19 @@
 
 this="`basename "$0"`"
 jetbrains_toolbox="$HOME/.local/share/JetBrains/Toolbox"
-apps_list=( $(ls "$jetbrains_toolbox/apps/") )
-app=""
 
 echo "+- $this $@"
 
 if [ ! -d "$jetbrains_toolbox" ]; then
   echo "| ERROR: Folder '$jetbrains_toolbox' does not exist, exiting now."
   exit 1
+elif [ ! -d "$jetbrains_toolbox/apps" ]; then
+  echo "| ERROR: Folder '$jetbrains_toolbox/apps/' does not exist, exiting now."
+  exit 2
 fi
+
+apps_list=( $(ls "$jetbrains_toolbox/apps/") )
+app=""
 
 if [ $# -lt 1 ]; then
   echo "|"

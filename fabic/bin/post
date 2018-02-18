@@ -56,13 +56,15 @@ if [ $retv -gt 0 ]; then
   exit 3
 fi
 
-# Commit file if non-empty, and git push.
+# Remove file if empty.
 if [ ! -s "$postfile" ];
 then
   echo "File '$postfile' is empty => we're not committing changes."
   echo -e "\e[31m\` Removing empty file\e[0m '\e[93m$postfile\e[0m'."
   rm -v "$postfile" ||
     echo -e "\e[31m  \` FAILED (!)\e[0m"
+# Commit file if non-empty, and git push.
+# (false: using in-Vim Git/Fugitive plugin).
 elif false;
 then
   # Force Jekyll to rebuild the homepage.
