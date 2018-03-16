@@ -15,43 +15,94 @@
 #   Some time ago, _they_ used to have these stuff in `dot_bash_profile`.
 #
 
+# If the sentinel variable is set, stop here and now.
+# ^ not a good idea, one _needs_ to be able to reload its .bashrc on many
+#   circumstances.
+#if [ ! -z ${FABIC_BASHRC_SOURCED+x} ]; then
+#  return
+#fi
+
+# Sentinel variable for me to debug things, may have values 1,2,3
+# depending on where this script ended.
+export FABIC_BASHRC_SOURCED=1
+
+function _is_interactive_shell() {
+  [[ $- == *i* ]] && return 0 || return 127
+}
+
+function _is_login_shell() {
+  shopt -q login_shell && return 0 || return 127
+}
+
+# See https://stackoverflow.com/a/30520299
+function _shell_has_terminal() {
+  [ -t 1 ] && return 0 || return 127
+}
+
+function _shell_stdout_is_redirected() {
+  [ -p /dev/stdout ] && return 0 || return 127
+}
+
+# Define the `echox()` wrapper function.
+if _shell_has_terminal || _shell_stdout_is_redirected ; then
+  function echox() {
+    echo "$@"
+  }
+else
+  function echox() {
+    true
+  }
+fi
+
+
 # FABIC: Group-work friendly umask now/here so that any of g+rwx is preserved,
 #        (done here early for Rsync/Scp/etc).
 umask 0002
 
+
 # Test for an interactive shell.  There is no need to set anything
 # past this point for scp and rcp, and it's important to refrain from
 # outputting anything in those cases.
-if [[ $- != *i* ]] ; then
+if ! _is_interactive_shell ; then
 	# Shell is non-interactive.  Be done now!
 
   # FIXME: (?) Dude, this ensures you will never have non-interactive SSH
-  #        (?) connection like Rsync or whatever, that break unexpectedly
+  # (FIXED)(?) connection like Rsync or whatever, that break unexpectedly
   #        (?) due to some script writing to stdout/err where it shall not
   #        (?) have.
   #        (?) BUT: this also means that your environment customizations like
   #        (?)      $PATH, etc, won't be processed at all.
 
-	return
+	# return
+  # ^ EDIT/2018-03-16: We're no longer stopping here, for I do need ~/.bashrc
+  #                    to set things up, without echoing anything though, so that
+  #                    I may run CRON/Systemd-timer scripts that source this script
+  #                    as needed.
+  #                    => hence `echo` is replaced with `echox()` ;
+  #                       and _is_interactive_shell() or _is_login_shell() are
+  #                       used where applicable.
+  false;
 fi
 
+FABIC_BASHRC_SOURCED=2
 
 ## ~~Auto-Screen~~ (edit: this is your old setup).
 #
 # FABIC/2012-11-03
 # See http://geekscrap.com/2010/02/using-screen-as-your-login-shell/
 #
-if false && [ "x`which screen 2> /dev/null`" != "x" -a ${SHLVL} -eq 1 ];
+if false && _is_interactive_shell && _shell_has_terminal \
+         && [ "x`which screen 2> /dev/null`" != "x" -a ${SHLVL} -eq 1 ];
 then
     ((SHLVL+=1)); export SHLVL
     #exec screen -R -e "^Ee" ${SHELL} -l
     screen -R -e "^Ee" ${SHELL} -l
     ((SHLVL-=1)); export SHLVL
-    echo
-    echo "///////////////////////////////////////////////////////"
-    echo "~/.bash_profile: End of screen-itized session, SHLVL=$SHLVL"
-    echo "///////////////////////////////////////////////////////"
-    echo
+    echox
+    echox "///////////////////////////////////////////////////////"
+    echox "~/.bash_profile: End of screen-itized session, SHLVL=$SHLVL"
+    echox "///////////////////////////////////////////////////////"
+    echox
 fi
 
 # F.2012-10-31 : List of screens.
@@ -63,29 +114,30 @@ fi
 # Find out if we have any TMUX detached session and automatically re-attach
 # (note that this test of nested bash processes is _not_ totally correct,
 #  but works well in practice).
-if true && [[ $SHLVL == 1 ]]; then
+if true && _is_interactive_shell && _shell_has_terminal \
+        && [[ $SHLVL == 1 ]] && [ -z ${TMUX+x} ]; then
     # TMUX !
     if type -P tmux > /dev/null && tmux has-session 2> /dev/null ; then
         if tmux attach ; then
-            echo
-            echo "# ${BASH_SOURCE[0]} : \`tmux attach\` terminated, ok."
-            echo
+            echox
+            echox "# ${BASH_SOURCE[0]} : \`tmux attach\` terminated, ok."
+            echox
         else
-            echo
-            echo "# ${BASH_SOURCE[0]} : WARNING: tmux attached terminated with non-zero exit status -_- (nevermind)"
-            echo
+            echox
+            echox "# ${BASH_SOURCE[0]} : WARNING: tmux attached terminated with non-zero exit status -_- (nevermind)"
+            echox
         fi
     fi
     # SCREEN ? (TODO: chaining this here after we run Tmux ain't great, but you don't resort to Screen that often, so anyway...).
     if type -P screen > /dev/null && [[ ! -z "$(screen -ls | grep '^\s*[0-9]*\.\S\+\s\+(Detached)\s*$')" ]]; then
         if screen -r ; then
-            echo
-            echo "# ${BASH_SOURCE[0]} : “screen -r” terminated, ok."
-            echo
+            echox
+            echox "# ${BASH_SOURCE[0]} : “screen -r” terminated, ok."
+            echox
         else
-            echo
-            echo "# ${BASH_SOURCE[0]} : WARNING: “screen -r” terminated with non-zero exit status -_- (nevermind)"
-            echo
+            echox
+            echox "# ${BASH_SOURCE[0]} : WARNING: “screen -r” terminated with non-zero exit status -_- (nevermind)"
+            echox
         fi
     fi
 fi
@@ -93,16 +145,16 @@ fi
 
 # TMUX: Inform user that he is run by tmux.
 if [ ! -z ${TMUX+x} ]; then
-  echo "FYI: We're being run by TMUX somehow here."
+  echox "FYI: We're being run by TMUX somehow here."
   false && tmux list-session |& sed -e 's/^/       - /'
   [ ! -S "${TMUX%%,*}" ] &&
-    echo "FYI: WARNING: \$TMUX='${TMUX%%,*}' is supposed to be a socket."
+    echox "FYI: WARNING: \$TMUX='${TMUX%%,*}' is supposed to be a socket."
 fi
 
 
 # Source the system-wide bashrc.
 if true; then
-  echo "FYI: About to source the system-wide bashrc."
+  echox "FYI: About to source the system-wide bashrc."
   # CentOS
   if [ -f /etc/bashrc ]; then
     . /etc/bashrc
@@ -120,22 +172,23 @@ fi
 export LANG=en_US.UTF-8
 
 
-# FABIC/2015-12-03
-# For Ctrl-S forward search ability (the converse of Ctrl-R) we're disabling
-# the “stop scrolling terminal ctrl thing / signal”
-stty stop ""
+if _shell_has_terminal ; then
+  # FABIC/2015-12-03
+  # For Ctrl-S forward search ability (the converse of Ctrl-R) we're disabling
+  # the “stop scrolling terminal ctrl thing / signal”
+  stty stop ""
 
-# check the window size after each command and, if necessary,
-# update the values of LINES and COLUMNS.
-shopt -s checkwinsize
+  # check the window size after each command and, if necessary,
+  # update the values of LINES and COLUMNS.
+  shopt -s checkwinsize
 
-# If set, the pattern "**" used in a pathname expansion context will
-# match all files and zero or more directories and subdirectories.
-shopt -s globstar
+  # If set, the pattern "**" used in a pathname expansion context will
+  # match all files and zero or more directories and subdirectories.
+  shopt -s globstar
 
-# make `less` more friendly for non-text input files, see lesspipe(1)
-[ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
-
+  # make `less` more friendly for non-text input files, see lesspipe(1)
+  [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+fi
 
 # FABIC/2015-12-03
 # Replace current bash process with a new one, needed here in .bashrc
@@ -230,38 +283,44 @@ fi
 
 # Further aliases may be defined per home@host.
 if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
+  echox "# FYI: Found ~/.bash_aliases, sourcing it."
+  . ~/.bash_aliases
 fi
 
 
 # FABIC: Start an SSH Agent... (is this fine ?)
 # @link http://unix.stackexchange.com/a/90869
 # ( See also the SSH_ASKPASS setup somewhere here ).
-if [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ] ; then
-    echo "# FYI: Dude, starting ssh-agent from ${BASH_SOURCE[0]}"
-    echo "# BTW: This may _not_ be what you want (!!)"
+if _is_login_shell \
+    && ( [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ] ) ;
+then
+    echox "# FYI: Dude, starting ssh-agent from ${BASH_SOURCE[0]}"
+    echox "# BTW: This may _not_ be what you want (!!)"
     eval `ssh-agent -s`
     # TODO: ^ check exit status or sthg ?
     #ssh-add
-    echo
+    echox
 fi
 
 # SSH agent: If the agent is running then we're on the "local" machine (probably
 #            not in a remote shell) => check that the agent has at least one key
 #            and add it if not.
-if [ -n "$SSH_AUTH_SOCK" ] && [ -n $SSH_AGENT_PID ] && [ $SSH_AGENT_PID -gt 0 ]; then
+if _is_login_shell && [ -n "$SSH_AUTH_SOCK" ]     \
+                   && [ ! -z ${SSH_AGENT_PID+x} ] \
+                   && [ $SSH_AGENT_PID -gt 0 ]    ;
+then
   if ! ssh-add -l >/dev/null 2>&1 ; then
-    echo -e "# \e[31m (!!)\e[0m SSH agent has no keys."
+    echox -e "# \e[31m (!!)\e[0m SSH agent has no keys."
     if [ -r ~/.ssh/id_rsa ]; then
-      echo -e "# \e[31m   \`\e[0m Adding key ~/.ssh/id_rsa"
+      echox -e "# \e[31m   \`\e[0m Adding key ~/.ssh/id_rsa"
       if ! ssh-add ~/.ssh/id_rsa ; then
-        echo -e "# \e[31m    \` (!!!)\e[0m WARNING: \`ssh-add ~/.ssh/id_rsa\` failed (!)"
+        echox -e "# \e[31m    \` (!!!)\e[0m WARNING: \`ssh-add ~/.ssh/id_rsa\` failed (!)"
       fi
     else
-      echo -e "# \e[31m   \` (!)\e[0m Found no ~/.ssh/id_rsa key."
+      echox -e "# \e[31m   \` (!)\e[0m Found no ~/.ssh/id_rsa key."
     fi
   else
-    echo -e "# SSH agent has key(s):"
+    echox -e "# SSH agent has key(s):"
     ssh-add -l | sed -e 's/^/# - /'
   fi
 fi
@@ -283,42 +342,43 @@ fi
 if [ -z "$DISPLAY" ] && [ ! -z "$SSH_CONNECTION" ];
 then
     export DISPLAY="${SSH_CONNECTION%% *}:0"
-    echo
-    echo "# WARN: Dude! \$DISPLAY is not set, and it happens that you're doing"
-    echo "#       SSH here, so we are inferring \$DISPLAY='$DISPLAY'"
-    echo "#       in the unlikely case you would like to forward back some X11..."
-    echo "#       (like issuing \`xhost +\` from whence you came, or whatever)"
-    echo
+    echox
+    echox "# WARN: Dude! \$DISPLAY is not set, and it happens that you're doing"
+    echox "#       SSH here, so we are inferring \$DISPLAY='$DISPLAY'"
+    echox "#       in the unlikely case you would like to forward back some X11..."
+    echox "#       (like issuing \`xhost +\` from whence you came, or whatever)"
+    echox
 fi
 
 # FABIC: Ruby GEMs bin. dir. (fixme: dirty).
 #        (skept if RVM is installed).
 if [ -d ~/.gem/ruby/ ];
 then
-  echo "FYI: Found some Ruby stuff under ~/.gem/ruby/..."
+  echox "FYI: Found some Ruby stuff under ~/.gem/ruby/..."
   rubies=( $(ls -1d ~/.gem/ruby/*/bin | sort -Vr) )
   if [ ${#rubies[@]} -gt 0 ]; then
     if [ -d ~/.rvm/bin/rvm ]; then
-      echo "     ^ Skipping \$PATH setup : RVM is installed."
+      echox "     ^ Skipping \$PATH setup : RVM is installed."
     else
-      echo "     ^ Adding Ruby GEM bin. dir. '${rubies[0]}'."
+      echox "     ^ Adding Ruby GEM bin. dir. '${rubies[0]}'."
       pathprepend "${rubies[0]}"
     fi
   else
-    echo "     ^ Found no ~/.gem/ruby/*/bin/ GEM bin. dir."
+    echox "     ^ Found no ~/.gem/ruby/*/bin/ GEM bin. dir."
   fi
   unset rubies
 fi
 
 # Ruby RVM
 if [ -x ~/.rvm/bin/rvm ]; then
-  echo "FYI: Found RVM (Ruby Versions Manager)."
+  echox "FYI: Found RVM (Ruby Versions Manager)."
   pathprepend $HOME/.rvm/bin
   if [ -s "$HOME/.rvm/scripts/rvm" ]; then
     source "$HOME/.rvm/scripts/rvm"
-    echo "     ^ Sourced RVM shell script '$HOME/.rvm/scripts/rvm'."
+    echox "     ^ Sourced RVM shell script '$HOME/.rvm/scripts/rvm'."
   fi
 fi
+
 
 # Host-local ~/.bashrc.d/ : may contain some .sh / .bash scripts that are
 # local to the system.
@@ -326,7 +386,7 @@ fi
 #                    in my Bash-it repo. (ex. per machine scripts)...
 if [ -d ~/.bashrc.d/ ]; then
   for script in $(find ~/.bashrc.d/ -name \*.sh -o -name \*.bash); do
-    echo "# Sourcing shell script '$script'"
+    echox "# Sourcing shell script '$script'"
     [ -r "$script" ] && source "$script"
   done
 fi
@@ -352,7 +412,7 @@ fi
 # Node.js pre-compiled binaries from https://nodejs.org/ (FABIC.2017-08-29 ).
 nodejs_local_binary_dist="$( (ls -1d ~/.local/node-v*-linux-* | sort -V | tail -n1) 2> /dev/null )"
 if [ -d "${nodejs_local_binary_dist}" ] && [ -x "$nodejs_local_binary_dist/bin/node" ]; then
-  echo "FYI: Found Node.js at '$nodejs_local_binary_dist/bin/node'"
+  echox "FYI: Found Node.js at '$nodejs_local_binary_dist/bin/node'"
   pathprepend "$nodejs_local_binary_dist/bin" PATH
   pathprepend "$nodejs_local_binary_dist/include" INCLUDE
   #pathprepend "$nodejs_local_binary_dist/share/man" MANPATH
@@ -362,7 +422,7 @@ unset nodejs_local_binary_dist
 
 # Rust! ( https://www.rust-lang.org/ )
 if [ -f "$HOME/.cargo/bin/rustc" ]; then
-  echo "FYI: Dude, do some Rust coding or you might rust o_o"
+  echox "FYI: Dude, do some Rust coding or you might rust o_o"
   pathprepend "$HOME/.cargo/bin"
 fi
 
@@ -373,23 +433,23 @@ fi
 
 # FABIC: gVim forks a shell in a 'dumb' terminal that do not comprehend colors,
 #        hence we're setting up a simple PS1/2 prompt here.
-if [ "$TERM" == "dumb" ]; then
-  echo "# FYI: dumb terminal detected (\$TERM='$TERM') => adjusting prompt (w/o colors)."
+if [ "$TERM" == "dumb" ] && [ ! -z ${PS1+x} ]; then
+  echox "# FYI: dumb terminal detected (\$TERM='$TERM') => adjusting prompt (w/o colors)."
   [ -n "$PROMPT_COMMAND" ] && unset PROMPT_COMMAND
   PS1="(\t) [\u@\H] \j \w $ "
   PS2=''
   PS4='+ '
-  echo "#      \`-> PS1='$PS1'"
+  echox "#      \`-> PS1='$PS1'"
 fi
 
 
 # FABIC: Print out some environment variables :
 if true; then
-  echo "Your environment, some of it :"
+  echox "Your environment, some of it :"
   for e in SHLVL DISPLAY EDITOR LANG LD_LIBRARY_PATH PATH SSH_CONNECTION SSH_ASKPASS SSH_AUTH_SOCK MANPATH TMUX INCLUDE ;
   do
     if [ ! -z ${!e+x} ]; then
-      echo -e "   \e[1m$e\e[0m = ${!e}"
+      echox -e "   \e[1m$e\e[0m = ${!e}"
     fi
   done
 fi
@@ -407,14 +467,16 @@ if true; then
   for vname in Clang Rust NodeJS JavaC Php Python Ruby ; do
     if [ ! -z "${!vname}" ]; then
       if [ -L "${!vname}" ]; then
-        echo -e "> \e[94m$vname\e[0m is \e[96m${!vname} \e[39;2m--symlink-to-->\e[22;34m $(readlink -m "${!vname}")\e[0m"
+        echox -e "> \e[94m$vname\e[0m is \e[96m${!vname} \e[39;2m--symlink-to-->\e[22;34m $(readlink -m "${!vname}")\e[0m"
       else
-        echo -e "> \e[94m$vname\e[0m is \e[34m${!vname}\e[0m"
+        echox -e "> \e[94m$vname\e[0m is \e[34m${!vname}\e[0m"
       fi
     fi
   done
 
   unset Clang Rust NodeJS JavaC Php Ruby
 fi
+
+FABIC_BASHRC_SOURCED=3
 
 # vim: ft=sh

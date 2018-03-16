@@ -6,6 +6,7 @@ ST_BIN="$( type -P sublime_text )"
 
 # Not found in path.
 if [ -z "$ST_BIN" ]; then
+  >&2 echo -e "(!) \`sublime_text\` wasn't found in \$PATH, searching under /opt"
   # Search under /opt
   if [ -x /opt/sublime_text/sublime_text ]; then
     ST_BIN=/opt/sublime_text/sublime_text

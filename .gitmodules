@@ -23,3 +23,6 @@
 [submodule "fabic-dude-vim"]
 	path = fabic/dude.vim
 	url = git@github.com:fabic/dude.vim.git
+[submodule "whiteinge-ok-sh"]
+	path = fabic/3rdparty/ok.sh
+	url = git@github.com:whiteinge/ok.sh.git
