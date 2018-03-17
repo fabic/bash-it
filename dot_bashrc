@@ -44,7 +44,10 @@ function _shell_stdout_is_redirected() {
 }
 
 # Define the `echox()` wrapper function.
-if _shell_has_terminal || _shell_stdout_is_redirected ; then
+#if _shell_has_terminal || _shell_stdout_is_redirected ; then
+# ^ DON'T: Causes Rsync to complain with “protocol version mismatch -- is your shell clean?”
+#          Test with: `ssh vps.fabic.net /bin/true > tutu.dat`
+if _shell_has_terminal ; then
   function echox() {
     echo "$@"
   }
