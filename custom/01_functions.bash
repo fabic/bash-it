@@ -47,6 +47,15 @@ function x() {
     xdg-open "$@"
 }
 
+# `f` : Fetch some HTTP resource with Curl (output piped through less).
+function f() {
+  local -a args=( "$@" )
+  curl --dump-header /dev/stderr \
+    "${args[@]}" \
+    | less
+    #-o /dev/stdout \
+}
+
 # `w` : Quite locate file(s).
 #
 # Locate files in arguments :

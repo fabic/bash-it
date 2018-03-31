@@ -45,7 +45,8 @@ if [ $# -lt 1 ]; then
         let i=i+1
       done
       echo -en "\e[34m\`~~> Execute program numbered (default $sel) : "
-      read -e -i $sel sel
+      #read -e -i $sel sel
+      read -e sel
       echo "\`~~> exec ${app_bins[$sel]}"
       exec "${app_bins[$sel]}"
       exit 2
@@ -55,6 +56,7 @@ if [ $# -lt 1 ]; then
   echo "+-"
 else
   app="$1"
+  shift
 fi
 
 app_dir="$jetbrains_toolbox/apps/$app"
@@ -71,9 +73,11 @@ fi
 app_bins=( $( ls -1d -tu $app_dir/*/*/bin/*.sh | grep -vE '(format|inspect)\.sh$' | sort -Vr ) )
 
 echo "FYI: Found these $app versions installed :"
-for _app in ${app_bins[@]}; do echo "* $_app"; done
+for _app in ${app_bins[@]}; do echo "       - $_app"; done
 
 echo
+  echo " ~~> ${app_bins[0]}"
+  echo
   read -p " -- Press any key to launch -- (Ctrl-C to abort) --"
 echo
 

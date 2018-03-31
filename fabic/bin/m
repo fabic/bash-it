@@ -2,8 +2,8 @@
 
 echo "That' itch $0 script you wrote dude"
 
-exec xterm -rv -geometry 120x50+0+0 -e \
-	mplayer \
+#exec xterm -rv -geometry 120x50+0+0 -e
+exec mplayer \
 	-ao pulse \
 	-subcp utf8 \
 	-ass -subfont-outline 0 -ass-font-scale 2.5 \

@@ -2,5 +2,22 @@
 #
 # https://askubuntu.com/questions/95910/command-for-determining-my-public-ip
 
-dig +short myip.opendns.com @resolver1.opendns.com
+dig +short myip.opendns.com @resolver1.opendns.com ||
+  curl ipinfo.io/ip ||
+  curl ipecho.net/plain ||
+  curl icanhazip.com ||
+  curl ipv4.icanhazip.com ||
+  curl ident.me ||
+  curl v4.ident.me ||
+  curl v6.ident.me ||
+  curl http://checkip.amazonaws.com ||
+  curl http://smart-ip.net/myip ||
+  ( wget -qO- http://ipecho.net/plain && echo )
 
+function geekiest_method() {
+  echo -en '\x00\x01\x00\x08\xc0\x0c\xee\x42\x7c\x20\x25\xa3\x3f\x0f\xa1\x7f\xfd\x7f\x00\x00\x00\x03\x00\x04\x00\x00\x00\x00' |
+    nc -u -w 2 stun.services.mozilla.com 3478 |
+    dd bs=1 count=4 skip=28 2>/dev/null |
+    hexdump -e '1/1 "%u."' |
+    sed 's/\.$/\n/'
+}

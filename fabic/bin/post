@@ -65,7 +65,7 @@ then
     echo -e "\e[31m  \` FAILED (!)\e[0m"
 # Commit file if non-empty, and git push.
 # (false: using in-Vim Git/Fugitive plugin).
-elif false;
+elif true;
 then
   # Force Jekyll to rebuild the homepage.
   touch index.html
