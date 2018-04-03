@@ -2,8 +2,11 @@
 #
 # https://askubuntu.com/questions/95910/command-for-determining-my-public-ip
 
+[ $# -gt 0 ] && action="$1" || action="one"
+
 commands=(
     # Go with a DNS query @ OpenDNS if we have the `dig` utility.
+    # (NOTE: must be the first entry, see EOF case in dns)...
     "(type -p dig >/dev/null && dig +short myip.opendns.com @resolver1.opendns.com)"
 
     "curl -s ipinfo.io/ip"
@@ -21,15 +24,42 @@ commands=(
     "(wget -qO- http://ipecho.net/plain && echo)"
   )
 
+# FIXME: find out how to close the connection.
 function geekiest_method_queries_stun_server() {
-  echo -en '\x00\x01\x00\x08\xc0\x0c\xee\x42\x7c\x20\x25\xa3\x3f\x0f\xa1\x7f\xfd\x7f\x00\x00\x00\x03\x00\x04\x00\x00\x00\x00' |
-    nc -u -w 2 stun.services.mozilla.com 3478 |
-    dd bs=1 count=4 skip=28 2>/dev/null |
-    hexdump -e '1/1 "%u."' |
-    sed 's/\.$/\n/'
+  curl -s http://olegh.ftp.sh/public-stun.txt |
+    grep -v '^#' | column -t -s: | shuf -n1 |
+    ( read server port &&
+      echo "Querying STUN server '$server' on port $port" &&
+      echo -en '\x00\x01\x00\x08\xc0\x0c\xee\x42\x7c\x20\x25\xa3\x3f\x0f\xa1\x7f\xfd\x7f\x00\x00\x00\x03\x00\x04\x00\x00\x00\x00' |
+      nc -u -w 2 "$server" "$port" |
+      dd bs=1 count=4 skip=28 2>/dev/null |
+      hexdump -e '1/1 "%u."' |
+      sed 's/\.$/\n/' )
 }
 
-for cmd in "${commands[@]}"; do
-  ip="$( bash -c "${cmd}" )"
-  echo "$ip  $cmd"
-done
+case "$action" in
+  all)
+    for cmd in "${commands[@]}"; do
+      ip="$( bash -c "${cmd}" )"
+      echo "$ip  $cmd"
+    done
+    ;;
+  dns)
+    bash -c "${commands[0]}"
+    ;;
+  one)
+    shuf -n1 -e "${commands[@]}"
+    ;;
+  stun)
+    geekiest_method_queries_stun_server
+    ;;
+  *)
+    echo "ERROR: Unknown action '$action' (may be one of: 'one', 'all', 'stun')"
+    echo
+    echo "USAGE: $0 [all|one|sun]"
+    echo
+    exit 1
+esac
+
+## EOF ##
+
