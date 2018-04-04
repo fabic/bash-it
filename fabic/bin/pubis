@@ -47,8 +47,17 @@ case "$action" in
   dns)
     bash -c "${commands[0]}"
     ;;
+  # Iterate until one of the commands return something.
+  # (commands are shuffled).
   one)
-    shuf -n1 -e "${commands[@]}"
+    ip=""
+    let max_iter=${#commands[@]}
+    while [ -z "$ip" ] && [ $max_iter -gt 0 ] ; do
+      cmd="$(shuf -n1 -e "${commands[@]}")"
+      ip="$( bash -c "${cmd}" )"
+      echo "$ip  $cmd"
+      let max_iter=$max_iter-1
+    done
     ;;
   stun)
     geekiest_method_queries_stun_server
