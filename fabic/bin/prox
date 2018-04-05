@@ -1,0 +1,41 @@
+#!/bin/bash
+#
+# F/2018-04-05
+
+cmd=( "$@" )
+
+_proxy_user="dude"
+_proxy_pass="XXXXXX"
+
+http_proxy="http://$_proxy_user:$_proxy_pass@proxy.fabic.net"
+https_proxy="$http_proxy"
+
+export http_proxy https_proxy
+
+echo "+- $0 $@"
+echo "| http_proxy='$http_proxy'"
+echo "| https_proxy='$https_proxy'"
+echo "|"
+
+if [ $# -lt 1 ]; then
+  echo "| USAGE: $0 <command> [<arg1> <arg2> ...]"
+  echo "|       \` Runs command with the \$http_proxy and \$https_proxy environment variables."
+  echo "+-"
+  exit 1
+fi
+
+echo "| Running command :"
+echo "|   ${cmd[@]}"
+echo "+-"
+echo
+
+"${cmd[@]}"
+
+retv=$?
+
+echo
+echo "|"
+echo "+- DONE, exit status: $retv (\`$0 $@\`)"
+echo
+
+exit $retv
