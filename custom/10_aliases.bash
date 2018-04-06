@@ -40,4 +40,7 @@ alias stn='st -n'
 alias stw='st -w'
 
 # “ Where is ” == which ...
-alias wi='type -p'
+#alias wi='type -p'
+# ^ We now have a `w` function that does this and more
+#   see `custom/01_functions.bash`
+# ^ Now using `wi` for another "what is..."

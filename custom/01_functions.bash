@@ -200,6 +200,21 @@ function vv() {
   v $_g -O `ww` "$@"
 }
 
+# `wi` : What is <thing>.
+function wi() {
+  local thing="$1"
+  local type="$( type -t "$thing" )"
+  echo "'$thing' is-a '$type'"
+  if [ "$type" == "file" ]; then
+    for fil in "$( type -p "$thing" )"; do
+      file "$fil"
+    done
+  fi
+}
+
+
+# TODO: review that ooold thing.
+# NOTE: See fabic/bin/prox script.
 proxy_unset() {
     #local -a varlist=( HTTP_PROXY HTTPS_PROXY http_proxy https_proxy ALL_PROXY NO_PROXY )
     local -a varlist=( $(env | grep -io '^.\+_proxy=') )
@@ -215,6 +230,7 @@ proxy_unset() {
     done
 }
 
+# TODO: Function that used to emit a beep: edit so that it does that + sends some desktop notification or sthg.
 # F.2014-09-16
 function hey() {
 	local count=${1:-1}
