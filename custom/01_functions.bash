@@ -48,12 +48,13 @@ function x() {
 }
 
 # `F` : Fetch some HTTP resource with Curl (output piped through less).
+# TODO: enhance so as to prepend a missing http:// prefix so that one do not have to type it.
 function F() {
   local -a args=( "$@" )
   curl --dump-header /dev/stderr \
     "${args[@]}" \
-    | less
-    #-o /dev/stdout \
+    | ( [ -p /dev/stdout ] && cat || vim -R -)
+  # ^ if stdout is not redirected => open with Vim.
 }
 
 # `f <regex1> [<regex2>|<dir>]*`
