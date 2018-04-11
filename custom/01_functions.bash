@@ -47,13 +47,55 @@ function x() {
     xdg-open "$@"
 }
 
-# `f` : Fetch some HTTP resource with Curl (output piped through less).
-function f() {
+# `F` : Fetch some HTTP resource with Curl (output piped through less).
+function F() {
   local -a args=( "$@" )
   curl --dump-header /dev/stderr \
     "${args[@]}" \
     | less
     #-o /dev/stdout \
+}
+
+# `f <regex1> [<regex2>|<dir>]*`
+# Find files matching a regex (egrep type).
+# TODO: directories can currently be specified in any order, interleaved with
+#       regex-es, but these are collected and passed as 1st arguments to find.
+#       ^ see if we want to have sthg more complex.
+function f() {
+  local locations=( )
+  local find_args=(
+      # Ignore all dotted '.xxx/' dirs.
+      #   & CMakeFiles/ sub-directories.
+      \( -type d \( -name '.?*' -o -name "CMakeFiles" \) -prune \)
+    )
+
+  # Directories are added to the list,
+  # anything else is considered to be a regex.
+  while [ $# -gt 0 ]; do
+    local arg="$1"
+    shift
+    if [ -d "$arg" ]; then
+      locations=( "${locations[@]}" "$arg" )
+    else
+      find_args=( "${find_args[@]}"
+        -o \( -type f \( -regextype egrep -iregex ".*$arg.*" \) -print \) )
+    fi
+  done
+
+  # Prepend the search locations.
+  find_args=( "${locations[@]}" "${find_args[@]}" )
+
+  >&2 echo "~~> \`find ${find_args[@]}\`"
+
+  ( find "${find_args[@]}" ||
+      (>&2 echo -e "\e[31;1;7m WARNING: \e[0;91m Bad \`find\` exit status: \e[97m$?\e[0m") && false
+   ) | sed -e 's@^\./*@@' \
+     | xargs -r -d\\n ls -1t
+  # ^ Strip the eventual leading './' (which is boring).
+  # ^ Sort: most recently modified files first.
+  # ^ NOTE: Usage of pipes here shadow `find` exit status (we can't catch errors).
+
+  >&2 echo "\`~> find ${find_args[@]}"
 }
 
 # `w` : Quite locate file(s).
