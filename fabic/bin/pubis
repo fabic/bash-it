@@ -55,7 +55,10 @@ case "$action" in
     while [ -z "$ip" ] && [ $max_iter -gt 0 ] ; do
       cmd="$(shuf -n1 -e "${commands[@]}")"
       ip="$( bash -c "${cmd}" )"
-      echo "$ip  $cmd"
+      echo -n "$ip"
+      type -p dig >/dev/null &&
+        echo -n "  $(dig +short -x "$ip")"
+      echo "  $cmd"
       let max_iter=$max_iter-1
     done
     ;;
