@@ -10,7 +10,7 @@
 
 # egrep compatible regular expression, which `find` understand
 # thanks to `-regextype egrep`
-regex=".*\.(js|php|c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
+regex=".*\.(s?css|js|php|c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
 
 # Usage note if no arguments :
 if [ $# -lt 1 ]; then

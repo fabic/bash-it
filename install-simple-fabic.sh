@@ -7,6 +7,9 @@ BASH_IT="$(cd "$(dirname "$0")" && pwd)"
 BASH_IT="${BASH_IT#$HOME}"
 BASH_IT="${BASH_IT##/}"
 
+echo
+echo "\$BASH_IT = $BASH_IT"
+
 cd ~ || exit 1
 
 ln -sfnvb "$BASH_IT/dot_bash_profile" ~/.bash_profile &&
@@ -21,6 +24,17 @@ if [ ! -d ~/.ssh ]; then
 fi
 
 ln -sfnvb "../$BASH_IT/fabic/dot_ssh_config" ~/.ssh/config
+
+# PhpStorm URL Handler
+if true && [ -x "$BASH_IT/fabic/3rdparty/phpstorm-url-handler/phpstorm-url-handler" ];
+then
+  echo "~> PhpStorm URL Handler"
+  #ln -sfnvb "../$BASH_IT/fabic/3rdparty/phpstorm-url-handler/phpstorm-url-handler" bin/
+  sudo desktop-file-install dev/bash-it/fabic/3rdparty/phpstorm-url-handler/phpstorm-url-handler.desktop
+  sudo update-desktop-database
+else
+  echo "WARN: Skipping PhpStorm URL handler setup."
+fi
 
 echo "$0 : DONE."
 

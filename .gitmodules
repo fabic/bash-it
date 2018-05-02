@@ -26,3 +26,6 @@
 [submodule "whiteinge-ok-sh"]
 	path = fabic/3rdparty/ok.sh
 	url = git@github.com:whiteinge/ok.sh.git
+[submodule "fabic/3rdparty/phpstorm-url-handler"]
+	path = fabic/3rdparty/phpstorm-url-handler
+	url = git@github.com:sanduhrs/phpstorm-url-handler.git
