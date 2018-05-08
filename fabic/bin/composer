@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# F/2018-05-08
+
+here="$(cd `dirname "$0"` && pwd)"
+
+if [ ! -s "$here/composer.phar" ]; then
+  echo "+-- $0 $@"
+  echo "|"
+  echo "| Hi, this is your wrapper script '$0' :"
+  echo "| --> Missing '$here/composer.phar', will now attempt download..."
+  if [ -x $here/setup/install-php-composer.sh ]; then
+    if ! $here/setup/install-php-composer.sh --install-dir="$here"; then
+      echo "| FAIL: -_- bad exit status from your installer script '$here/setup/install-php-composer.sh'."
+      exit 127
+    fi
+  fi
+  if [ ! -s "$here/composer.phar" ]; then
+    echo "| FAIL: composer.phar not found at: $here/setup/install-php-composer.sh"
+    exit 63
+  fi
+fi
+
+exec "$here/composer.phar" "$@"
+
+# vim: ft=sh et ts=2 sts=2

@@ -398,6 +398,8 @@ fi
 # PHP / Composer.phar "globally" installed stuff, e.g.
 #   `` composer.phar global require fabpot/php-cs-fixer `` :
 [ -d ~/.composer/vendor/bin ] && pathprepend ~/.composer/vendor/bin
+# ^ it appears this was relocated under ~/.config/  [2018-05].
+[ -d ~/.config/composer/vendor/bin ] && pathprepend ~/.config/composer/vendor/bin
 
 # MacPorts installs its stuff there.
 [ -d /opt/local/bin ]  && pathprepend /opt/local/bin
