@@ -6,6 +6,8 @@
 # and tail follow these. Additionnal arguments may be log file names.
 #
 
+# TODO/?: `locate -b -r '\(\.\|_\)log$' | xargs -r ls -ldtr` instead of find ?
+
 # Find out the normal user name, i.e. /me: fabi.
 user="$( [[ $EUID -ne 0 ]] && whoami || echo "${SUDO_USER:-dude}" )"
 
@@ -26,7 +28,9 @@ echo "| \$nlines_start = $nlines_start"
 
 searchdirs=(
     /var/log/httpd/
-    /var/log/samba/?mbd.log
+    /var/log/apache2/
+    #/var/log/samba/
+    # ^ Samba produces too many per-machine log files.
     /var/log/elasticsearch/
     #~$user/dev/*/tmp/
     # ^ Bash won't perform tild expansion here.
@@ -41,10 +45,17 @@ searchdirs=(
 
 # Find log files in those search dirs., keep the most recent ones.
 logfiles=( /var/log/samba/?mbd.log
+           /var/log/fail2ban.log
            "$(find "${searchdirs[@]}" -iname '*log' -mtime -$mtime)"
            "$@" )
 
-# TODO/?: `locate -b -r '\(\.\|_\)log$' | xargs -r ls -ldtr` ?
+# Discard files we can't read / do not exist.
+for i in ${!logfiles[@]}; do
+  if [[ ! -r ${logfiles[$i]} ]]; then
+    echo "| Skipping '${logfiles[$i]}' (doesn't exist / not readable)"
+    unset 'logfiles[i]'
+  fi
+done
 
 echo "+-"
 echo "| Will tail follow these log files :"
@@ -55,14 +66,18 @@ echo "+-"
 
 cmd=( tail -n$nlines_start -f "${logfiles[@]}" )
 
-if type -p ccze >/dev/null ; then
+echo "| NOTE: We're launching \`journalctl -b -f\` too here (!)"
+
+if [ ! -p /dev/stdout ] && type -p ccze >/dev/null ; then
   echo "| Great: found CCZE, piping output through it."
-  echo "| NOTE: We're launching \`journalctl -b -f\` too here (!)"
   echo "+--"
   echo
   ( ${cmd[@]} & journalctl -b -f ) | ccze -A
+elif [ -p /dev/stdout ]; then
+  echo "| Note: /dev/stdout is a pipe (FYI)"
+  ( ${cmd[@]} & journalctl -b -f )
 else
-  ${cmd[@]} # TODO: journalctl too ?
+  ( ${cmd[@]} & journalctl -b -f )
 fi
 
 # NOTE: this is "stupid" actually: tail hardly ever exits "normaly" (you hit Ctlr-C).
