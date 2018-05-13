@@ -9,6 +9,7 @@ cmd=(
       -dxdebug.remote_autostart=On
       -dxdebug.idekey=PHPSTORM
       -dxdebug.remote_host=127.0.0.1
+      --
         "$@"
 )
 

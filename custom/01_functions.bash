@@ -41,6 +41,13 @@ vin() {
     popd
 }
 
+## Wrapper for `realpath`
+# As a function instead of a bash alias since I'll need to adjust this so as
+# to cope with MacOSX having a realpath that differs slightly in behavior.
+function rp() {
+  realpath "$@"
+}
+
 # x == xdg-open
 # ^ I never use 'X' for anything from the command line, like e.g. x=...
 function x() {
