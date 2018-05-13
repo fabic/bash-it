@@ -8,6 +8,9 @@
 
 # TODO/?: `locate -b -r '\(\.\|_\)log$' | xargs -r ls -ldtr` instead of find ?
 # TODO/?: monitor remote files too? like e.g. your vps stuff ?
+#         `~> DON'T: JUST DO:
+#             $ ( monitor-logs.sh & ssh vps.fabic.net monitor-logs.sh ) | ccze -A
+# TODO: Find out how to cope with log rotation ?? like kill the tail process every one in a while ?
 
 # Find out the normal user name, i.e. /me: fabi.
 user="$( [[ $EUID -ne 0 ]] && whoami || echo "${SUDO_USER:-dude}" )"
