@@ -7,6 +7,7 @@
 #
 
 # TODO/?: `locate -b -r '\(\.\|_\)log$' | xargs -r ls -ldtr` instead of find ?
+# TODO/?: monitor remote files too? like e.g. your vps stuff ?
 
 # Find out the normal user name, i.e. /me: fabi.
 user="$( [[ $EUID -ne 0 ]] && whoami || echo "${SUDO_USER:-dude}" )"
@@ -46,7 +47,7 @@ searchdirs=(
 # Find log files in those search dirs., keep the most recent ones.
 logfiles=( /var/log/samba/?mbd.log
            /var/log/fail2ban.log
-           "$(find "${searchdirs[@]}" -iname '*log' -mtime -$mtime)"
+           $(find "${searchdirs[@]}" -iname '*log' -mtime -$mtime)
            "$@" )
 
 # Discard files we can't read / do not exist.
@@ -54,6 +55,8 @@ for i in ${!logfiles[@]}; do
   if [[ ! -r ${logfiles[$i]} ]]; then
     echo "| Skipping '${logfiles[$i]}' (doesn't exist / not readable)"
     unset 'logfiles[i]'
+  else
+    echo "| Including '${logfiles[$i]}'"
   fi
 done
 
