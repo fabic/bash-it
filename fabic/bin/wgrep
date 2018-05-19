@@ -1,0 +1,70 @@
+#!/bin/bash
+#
+# wgrep http://...
+#
+# F/2018-05-18 fabic.net
+
+this="$(basename "$0")"
+
+# Usage note if no arguments :
+if [ $# -lt 1 ]; then
+  echo
+  echo "Runs grep against some content fetch through curl."
+  echo
+  echo "Usage: $this <grep_arguments>... [--|-|] <curl_arguments>..."
+  echo
+  echo "Example: $this body -- http://google.fr/"
+  echo "         $this body -- http://google.fr/"
+  echo
+  exit 127
+fi
+
+# Left-side of `--' are for grep :
+grepargs=(
+  "--binary-files=without-match"
+  "--color=always"
+  "-Hn"
+)
+
+# Right side arguments will be for curl :
+curlargs=()
+
+# Splice left and right hand arguments around '--' :
+while [ $# -gt 0 ];
+do
+  arg="$1"
+
+  [ "${arg#http}" != "$arg" ] && break
+
+  shift
+
+  [ "$arg" == "--" ] && break
+  [ "$arg" == "-" ] && break
+
+  grepargs=( "${grepargs[@]}" "$arg" )
+done
+
+# Remainder arguments after '--' are for curl :
+curlargs=( -sSLk "$@" )
+
+curlcmd=( curl "${curlargs[@]}" )
+grepcmd=( grep "${grepargs[@]}" )
+
+(
+  echo "+-- $0 : BEGIN."
+  echo "|"
+  echo "| Running :"
+  echo "|"
+  echo "| ${curlcmd[@]} | ${grepcmd[@]}"
+  echo
+) >&2
+
+"${curlcmd[@]}" | "${grepcmd[@]}"
+
+retv=$?
+
+( echo
+  echo "+-- $0 : END, exit status: $retv" ) >&2
+
+exit $retv
+
