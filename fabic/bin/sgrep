@@ -10,7 +10,7 @@
 
 # egrep compatible regular expression, which `find` understand
 # thanks to `-regextype egrep`
-regex=".*\.(s?css|js|php|c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
+regex=".*\.(s?css|js|php|x?html?|c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
 
 # Usage note if no arguments :
 if [ $# -lt 1 ]; then
@@ -47,6 +47,18 @@ done
 
 # Remainder arguments after '--' are for find :
 findargs=( "$@" )
+
+# If no find arguments provided => infer default search paths.
+if [ ${#findargs[@]} ]; then
+  # PHP/LARAVEL
+  if [ -f artisan ] && [ -d app ] && [ -d vendor ]; then
+    echo "+-"
+    echo "| Inferred we're in a PHP/Laravel project, will search dirs :"
+    findargs=( $(find -maxdepth 1 -type d -regextype egrep \
+                   -not -regex '^(\.|\./(\..*|vendor|node_modules|bootstrap|storage|tmp))$' | sed -e 's@^\./@@') )
+    echo "|   ${findargs[@]}"
+  fi
+fi
 
 # Search sources files and grep :
 findcmd=(

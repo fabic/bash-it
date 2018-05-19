@@ -71,6 +71,7 @@ alias glast='gl -1'
 alias glhf='gl HEAD..FETCH_HEAD'
 alias gg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative"
 alias ggs="gg --stat"
+alias ggg="ggs -5"
 alias gsl="g shortlog -sn"
 alias gw="g whatchanged"
 alias gcount='g shortlog -sn'
@@ -105,6 +106,12 @@ alias gsbr='gsbh `gbr`'
 alias gsh='g show'
 alias gshr='gsh `gbr`'
 alias gsbho='gsbh ORIG_HEAD'
+
+# Compare wrt. Git/Flow-like branches
+alias gsbm='gsbh origin/master'
+alias gsbd='gsbh origin/develop'
+alias gsbs='gsbh origin/staging'
+alias gsbo='gsbh origin/master origin/staging origin/develop'
 
 alias gt='g tag'
 

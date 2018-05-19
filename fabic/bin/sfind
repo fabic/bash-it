@@ -69,10 +69,13 @@ if [ $retv -gt 0 ]; then
   (
   echo
   echo "| FAIL: exit status of \`find ...\` is non-zero ;"
-  echo "|        \` command was :"
-  echo "|"
-  echo "|   ${findcmd[@]}"
   ) >&2
 fi
+
+echo "| Command was :"
+echo "|"
+echo "|   ${findcmd[@]}"
+echo "+-- $0 $@"
+echo
 
 exit $retv

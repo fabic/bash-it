@@ -22,7 +22,7 @@ user_home="$(getent passwd "$user" | cut -f6 -d:)"
 mtime=10
 
 # For `tail -nX`
-nlines_start=1
+nlines_start=0
 
 echo "+-- $0 $@"
 echo "| \$user = $user"
@@ -50,6 +50,7 @@ searchdirs=(
 # Find log files in those search dirs., keep the most recent ones.
 logfiles=( /var/log/samba/?mbd.log
            /var/log/fail2ban.log
+           /var/log/fpm-php.www.log
            $(find "${searchdirs[@]}" -iname '*log' -mtime -$mtime)
            "$@" )
 
