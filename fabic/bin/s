@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# s : grep source code files, using ripgrep.
+#
+# F/2018-05-25
+
+echo "+-- $0 $@"
+echo "| In: $PWD"
+
+# egrep compatible regular expression, which `find` understand
+# thanks to `-regextype egrep`
+regex=".*\.(s?css|js|php|x?html?|c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
+
+searchpaths=()
+
+# Usage note if no arguments :
+if [ $# -lt 1 ]; then
+  echo
+  echo "Wrapper for ripgrep a.k.a \`rg\`"
+  echo
+  exit 127
+fi
+
+
+# If no find arguments provided => infer default search paths.
+if [ ${#findargs[@]} ]; then
+  # PHP/LARAVEL
+  if [ -f artisan ] && [ -d app ] && [ -d vendor ]; then
+    echo "+-"
+    echo "| Inferred we're in a PHP/Laravel project, will search dirs :"
+    searchpaths=( $(find -maxdepth 1 -type d -regextype egrep \
+                      -not -regex '^(\.|\./(\..*|vendor|node_modules|bootstrap|storage|tmp))$' | sed -e 's@^\./@@') )
+    globs=( "${globs[@]}" -g \*.php -g \*.?css -g \*.scss -g \*.?html -g \*.yml -g \*.json )
+    echo "|   ${searchpaths[@]}"
+  fi
+fi
+
+echo "| Search paths: ${searchpaths[@]}"
+echo "| Globs: ${globs[@]}"
+
+cmd=(rg "${globs[@]}" "$@" "${searchpaths[@]}")
+
+echo "+-"
+echo "| Running: "
+echo "|   ${cmd[@]}"
+echo
+
+"${cmd[@]}"
+
+( echo
+  echo "+-- $0 : END, exit status: $retv" ) >&2
+
+exit $retv
+

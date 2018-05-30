@@ -14,7 +14,8 @@ do
 		cpuinfo_transition_latency freqdomain_cpus \
 		scaling_setspeed stats ;
 	do
-		echo "|  * $j : `cat $k/$j`"
+    [ -r "$k/$j" ] &&
+      echo "|  * $j : `cat $k/$j`"
 	done
 
 	echo "|"

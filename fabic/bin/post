@@ -76,20 +76,25 @@ then
     exit 4
   fi
 
-  echo "git commit"
-  if ! git commit -m "Post: $postfile" "$postfile"; then
-    echo "ERROR: git commit failed -_-"
-    exit 5
-  fi
+  may_commit_push=0
+  # TODO: ^ grep the file for e.g. `published: true` maybe? then commit-push.
 
-  echo "git push"
-  if ! git push ; then
-    echo "WARNING: Failed to Git push -_-"
-  fi
+  if [ $may_commit_push -gt 0 ]; then
+    echo "git commit"
+    if ! git commit -m "Post: $postfile" "$postfile"; then
+      echo "ERROR: git commit failed -_-"
+      exit 5
+    fi
 
-  echo "git show"
-  if ! git show; then
-    echo "WARNING: Failed to Git show (?!) WTF -_-"
+    echo "git push"
+    if ! git push ; then
+      echo "WARNING: Failed to Git push -_-"
+    fi
+
+    echo "git show"
+    if ! git show; then
+      echo "WARNING: Failed to Git show (?!) WTF -_-"
+    fi
   fi
 
   echo

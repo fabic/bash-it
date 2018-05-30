@@ -63,6 +63,7 @@ function git_clean_local_merged_branches() {
       _remote_branch="$(g config "branch.$branch.merge")"
       _remote_branch="${_remote_branch##refs/heads/}"
       echo "| deleting local branch: $branch ${_remote:+-> $_remote/$_remote_branch}"
+      git branch -d "$branch" || break
     done
   retv=$?
 

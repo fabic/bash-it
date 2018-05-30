@@ -44,3 +44,43 @@ alias stw='st -w'
 # ^ We now have a `w` function that does this and more
 #   see `custom/01_functions.bash`
 # ^ Now using `wi` for another "what is..."
+
+# For your bin/s ripgrep wrapper script.
+[ `type -t s` == "alias" ] && unalias s
+
+if type -p fzf >/dev/null;
+then
+  [ `type -t z` == "alias" ] && unalias z
+  alias z='fzf-tmux -m --preview="head -$LINES {}"'
+
+  [ "`type -t fe`" == "function" ] && unset fe
+
+  # Borrowed from ../plugins/available/fzf.plugin.bash
+  zv() {
+    about "Open the selected file in the default editor"
+    group "fzf"
+    param "1: Search term"
+    example "fe foo"
+
+    local IFS=$'\n'
+    local files
+    local indir=""
+
+    # First arg. may be a dir. where to ch.dir. into
+    # before searching.
+    if [ $# -gt 0 ]; then
+      if [ -d "$1" ]; then
+        indir="$1"
+        shift
+      fi
+    fi
+
+    [ -n "$indir" ] && pushd "$indir"
+
+    files=( $(fzf-tmux --query="$1" --multi --select-1 --exit-0 --preview='head -$LINES {}') )
+    [[ -n "$files" ]] && ${EDITOR:-vim} "${files[@]}"
+
+    [ -n "$indir" ] && popd
+  }
+
+fi

@@ -54,6 +54,14 @@ function x() {
     xdg-open "$@"
 }
 
+# Source tree: ignores .git, vendor, node_modules, ...
+# Borrowed from `../aliases/enabled/general.aliases.bash`
+function stree() {
+  find -type d \( -name node_modules -o -name vendor -o -name cache -o -name tmp \
+                  -o -name .git -o -name .svn -o -name img -o -name images \) -prune \
+    -o "$@" -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
+}
+
 # `F` : Fetch some HTTP resource with Curl (output piped through less).
 # TODO: enhance so as to prepend a missing http:// prefix so that one do not have to type it.
 function F() {
@@ -203,7 +211,7 @@ fi
 function W() {
     local locations=( "$@" )
     # Extended-grep compatible reg. ex.
-    local regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|s|rs|js|py|php|rb)$"
+    local regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|s|rs|js|py|php|html|rb)$"
     local find_args=(
         "${locations[@]}"
              # Ignore all dotted '.xxx/' dirs.
@@ -246,8 +254,13 @@ function ww() {
 #        (arguments are passed to Vim).
 function vv() {
   local _g=
-  [ ! -z "$DISPLAY" ] && local _g="-g"
-  v $_g -O `ww` "$@"
+  if [ -n "$DISPLAY" ]; then
+    [ $# -gt 0 ] && gvim -geometry 100x50+0-0 "$@" \
+                 || gvim -geometry 100x50+0-0 -O `ww` "$@"
+  else
+    [ $# -gt 0 ] && vim "$@" \
+                 || vim -O `ww` "$@"
+  fi
 }
 
 # `wi` : What is <thing>.
