@@ -29,3 +29,6 @@
 [submodule "fabic/3rdparty/phpstorm-url-handler"]
 	path = fabic/3rdparty/phpstorm-url-handler
 	url = git@github.com:sanduhrs/phpstorm-url-handler.git
+[submodule "gogh-term-themes"]
+	path = fabic/3rdparty/gogh-terminal-themes
+	url = https://github.com/Mayccoll/Gogh.git
