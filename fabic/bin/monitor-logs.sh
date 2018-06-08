@@ -22,7 +22,7 @@ user_home="$(getent passwd "$user" | cut -f6 -d:)"
 mtime=10
 
 # For `tail -nX`
-nlines_start=0
+nlines_start=1
 
 echo "+-- $0 $@"
 echo "| \$user = $user"

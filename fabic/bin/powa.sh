@@ -21,11 +21,14 @@ do
 	echo "|"
 done
 
+echo
 read -p "Specify scaling governor : " -e -i "performance" scalg
+echo
 
 for k in /sys/devices/system/cpu/cpufreq/policy*/scaling_governor;
 do
 	echo "Current value '$k' : `cat $k`";
 	echo "$scalg" > $k;
-	echo "Reading updated value '$k' : `cat $k`"
+	echo "  \`~> Read updated value '$k' : `cat $k`"
+  echo
 done

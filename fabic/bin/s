@@ -4,41 +4,111 @@
 #
 # F/2018-05-25
 
-echo "+-- $0 $@"
-echo "| In: $PWD"
-
 # egrep compatible regular expression, which `find` understand
 # thanks to `-regextype egrep`
-regex=".*\.(s?css|js|php|x?html?|c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
+# FIXME: now unused
+regex=".*\.(s?css|js(on)?|php|x?html?|c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|hpp.inc|hh.inc|s|x)$"
+unset regex
 
+skipdirs=()
 searchpaths=()
+globs=()
 
 # Usage note if no arguments :
 if [ $# -lt 1 ]; then
+  this="`basename "$0"`"
   echo
-  echo "Wrapper for ripgrep a.k.a \`rg\`"
+  echo "Wrapper for ripgrep a.k.a \`rg\` which basically :"
+  echo "  - sets up glob file filters, e.g. -g \*.js -g \*.php"
+  echo "  - and search paths"
+  echo "  \`~> based upon the \"structure / type\" of directory we're in,"
+  echo "      e.g. be it a Laravel project,"
+  echo "      whether or not it has a node_modules/ subdir."
+  echo
+  echo "USAGE: $this <arguments for ripgrep>"
+  echo "USAGE: $this <arguments for ripgrep> [-] <any search paths override>"
+  echo
+  echo "Examples:"
+  echo "  $this -i '\\Scontainer\\S'"
+  echo "  $this Controller - app/"
+  echo "  $this '(\\.owl|caroussel)' - resources"
+  echo "  $this 'window\\.(jQuery|\\$)' - node_modules"
   echo
   exit 127
 fi
 
+echo "+-- $0 $@"
+echo "| In: $PWD"
 
 # If no find arguments provided => infer default search paths.
-if [ ${#findargs[@]} ]; then
+if [ ${#findargs[@]} ];
+then
+
   # PHP/LARAVEL
   if [ -f artisan ] && [ -d app ] && [ -d vendor ]; then
     echo "+-"
     echo "| Inferred we're in a PHP/Laravel project, will search dirs :"
-    searchpaths=( $(find -maxdepth 1 -type d -regextype egrep \
-                      -not -regex '^(\.|\./(\..*|vendor|node_modules|bootstrap|storage|tmp))$' | sed -e 's@^\./@@') )
+    skipdirs=( "${skipdirs[@]}" bootstrap storage tmp vendor )
     globs=( "${globs[@]}" -g \*.php -g \*.?css -g \*.scss -g \*.?html -g \*.yml -g \*.json )
-    echo "|   ${searchpaths[@]}"
+    [ -d public ] && skipdirs=( "${skipdirs[@]}" public ) \
+      && echo "| \`~> we'll exclude public/ too (!)"
   fi
+
+  # node_modules/
+  if [ -d node_modules ]; then
+    echo "+-"
+    echo "| Found a \`node_modules/\` subdir."
+    skipdirs=( "${skipdirs[@]}" dist node_modules )
+    globs=( "${globs[@]}" -g \*.js -g \*.json -g \*.vue -g \*.jsx )
+    # Also skip eventual dist/ & static/ files
+    # (^ we didn't ensure we're in a "pure" Node.js project dir.,
+    #    may be some PHP project or sthg else).
+    [ -d static ] && skipdirs=( "${skipdirs[@]}" static ) \
+      && echo "| \`~> we'll exclude static/ too."
+  fi
+
 fi
 
-echo "| Search paths: ${searchpaths[@]}"
-echo "| Globs: ${globs[@]}"
+# Build the skip-dirs regex.
+printf -v skipdirsrx '|%s' "${skipdirs[@]}"
+skipdirsrx="${skipdirsrx:1}" # remove leading '/'
+skipdirsrx="^(\\.|\\./\\..*|\\./($skipdirsrx))$"
 
-cmd=(rg "${globs[@]}" "$@" "${searchpaths[@]}")
+searchpaths=( $(find -maxdepth 1 -type d -regextype egrep \
+                  -not -regex "$skipdirsrx" | sed -e 's@^\./@@') )
+
+echo "| - \$globs:        ${globs[@]}"
+echo "| - \$skipdirs:     ${skipdirs[@]}"
+echo "| - \`~> \$skipdirsrx: '${skipdirsrx}'  # Reg. exp. for \`find ...\`, that is."
+echo "| - \$searchpaths:  ${searchpaths[@]}"
+echo "+--"
+
+# Collect arguments for Ripgrep.
+# Purpose here is: If we match a '-' or '--' then we're considering the rest
+# of the arguments as specific search paths _and_ we clear the \$searchpaths[]
+# list.
+args=()
+while [ $# -gt 0 ]; do
+  arg="$1"
+  shift
+  case "$arg" in
+    -|--) # dir. list separator => replace the search paths, exit loop.
+      searchpaths=( "$@" )
+      [ ${#searchpaths[@]} -lt 1 ] &&
+        echo "| Beware! you provided no arguments after dir. list separator '$arg' :-/"
+      break
+      ;;
+    *)
+      args=( "${args[@]}" "$arg" )
+      ;;
+  esac
+done
+
+echo "| Search paths: ${searchpaths[@]}"
+echo "| Globs:        ${globs[@]}"
+echo "| Arguments:    ${args[@]}"
+
+cmd=(rg "${globs[@]}" "${args[@]}" "${searchpaths[@]}")
 
 echo "+-"
 echo "| Running: "
@@ -48,6 +118,7 @@ echo
 "${cmd[@]}"
 
 ( echo
+  echo "|"
   echo "+-- $0 : END, exit status: $retv" ) >&2
 
 exit $retv

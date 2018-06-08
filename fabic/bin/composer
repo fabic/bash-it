@@ -21,6 +21,8 @@ if [ ! -s "$here/composer.phar" ]; then
   fi
 fi
 
+>&2 echo "~> Running '$here/composer.phar $@'"
+
 exec "$here/composer.phar" "$@"
 
 # vim: ft=sh et ts=2 sts=2

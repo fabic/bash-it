@@ -13,7 +13,17 @@ __git_complete gco _git_checkout
 __git_complete gcp _git_cherry_pick
 __git_complete gd  _git_diff
 __git_complete gf  _git_fetch
-__git_complete gl  _git_log
+
+__git_complete gl   _git_log
+__git_complete gll  _git_log
+__git_complete gl1  _git_log
+__git_complete gl11 _git_log
+__git_complete glhf _git_log
+__git_complete glast _git_log
+__git_complete gg   _git_log
+__git_complete ggg  _git_log
+__git_complete ggs  _git_log
+__git_complete ggt  _git_log
 
 __git_complete gsb  _git_show_branch
 __git_complete gsbh _git_show_branch
