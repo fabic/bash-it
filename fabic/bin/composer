@@ -21,8 +21,15 @@ if [ ! -s "$here/composer.phar" ]; then
   fi
 fi
 
->&2 echo "~> Running '$here/composer.phar $@'"
+_php=php
 
-exec "$here/composer.phar" "$@"
+type -p nxphp >/dev/null &&
+  echo "~> We'll use our wrapper \`nxphp\` script (php with xdebug not-enabled)." &&
+  _php=nxphp
+
+cmd=( "$_php" "$here/composer.phar" "$@" )
+>&2 echo "~> Running: ${cmd[@]}"
+
+exec "${cmd[@]}"
 
 # vim: ft=sh et ts=2 sts=2
