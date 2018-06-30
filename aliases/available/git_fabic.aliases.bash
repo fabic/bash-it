@@ -72,9 +72,11 @@ alias gl11='gl1 -1'
 alias glast='gl -1'
 alias glhf='gl HEAD..FETCH_HEAD'
 alias gg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative"
-alias ggt="git log --pretty=format:'%Cblue%ad%Creset - %Cred%h%Creset - %an - %s %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=iso --date-order"
-alias ggs="gg --stat"
-alias ggg="ggs -5"
+alias gga="git log --pretty=format:'%Cblue%ad%Creset - %Cred%h%Creset - %an - %s %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=iso --date-order"
+alias ggm='gg `git merge-base HEAD origin/master`...'
+alias ggs='gg `git merge-base HEAD origin/staging`...'
+alias ggd='gg `git merge-base HEAD origin/develop`...'
+alias ggg="gg -3"
 alias gsl="g shortlog -sn"
 alias gw="g whatchanged"
 alias gcount='g shortlog -sn'
@@ -115,6 +117,12 @@ alias gsbm='gsbh origin/master'
 alias gsbd='gsbh origin/develop'
 alias gsbs='gsbh origin/staging'
 alias gsbo='gsbh origin/master origin/staging origin/develop'
+
+# Compare branch with its upstream tracking branch,
+# i.e. git show branch develop develop@{u}
+function gsbu() {
+  gsb $1 "$1@{u}"
+}
 
 alias gt='g tag'
 

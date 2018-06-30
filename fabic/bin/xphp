@@ -3,12 +3,21 @@
 # F/2018-04-27
 #
 # Run PHP with XDebug enabled.
+#
+# https://xdebug.org/docs/profiler
+
+profilerOutputDir="."
+[ -d ./tmp ] &&
+  profilerOutputDir="$PWD/tmp/"
 
 cmd=(
   php -dxdebug.remote_enable=1
       -dxdebug.remote_autostart=On
       -dxdebug.idekey=PHPSTORM
       -dxdebug.remote_host=127.0.0.1
+      -dxdebug.profiler_enable=0
+      -dxdebug.profiler_output_dir="$profilerOutputDir"
+      -dxdebug.profiler_output_name="%s.%p.cachegrind.out"
         "$@"
 )
 

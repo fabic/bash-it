@@ -1,0 +1,14 @@
+#!/bin/bash
+#
+# F/2018-06-22
+#
+# Wrapper for executing neovim instead of Vim if available.
+
+if type -p nvim >/dev/null; then
+  exec nvim "$@"
+elif type -p vim >/dev/null; then
+  exec vim "$@"
+else
+  echo "Got na vim beltalowda!"
+  exit 127
+fi

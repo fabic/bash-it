@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# F/2018-04-27
+#
+# Run PHP _without_ XDebug enabled.
+# (see also the counterpart wrapper script: xphp)
+
+cmd=(
+  php -dxdebug.remote_enable=0
+      -dxdebug.remote_autostart=Off
+      -dxdebug.idekey=PHPSTORM
+      -dxdebug.remote_host=127.0.0.1
+        "$@"
+)
+
+>&2 echo "\`\` ${cmd[@]} \`\`  (says $0)"
+
+exec "${cmd[@]}"
+

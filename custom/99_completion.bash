@@ -30,6 +30,7 @@ __git_complete gsbh _git_show_branch
 __git_complete gsbm _git_show_branch
 __git_complete gsbs _git_show_branch
 __git_complete gsbo _git_show_branch
+__git_complete gsbu _git_show_branch
 
 __git_complete gst _git_stash
 __git_complete gm  _git_submodule
