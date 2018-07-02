@@ -50,8 +50,10 @@ alias stw='st -w'
 
 if type -p fzf >/dev/null;
 then
-  [ `type -t z` == "alias" ] && unalias z
+  [ "`type -t z`" == "alias" ] && unalias z
+  [ "`type -t zz`" == "alias" ] && unalias zz
   alias z='fzf-tmux -m --preview="head -$LINES {}"'
+  alias zz='fzf -f "$@"'
 
   [ "`type -t fe`" == "function" ] && unset fe
 

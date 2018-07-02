@@ -4,7 +4,17 @@
 #
 # Wrapper for executing neovim instead of Vim if available.
 
-if type -p nvim >/dev/null; then
+# Dude, you compiled Neovim from source with target
+# install. location at ~/.local/neovim/
+# See https://github.com/neovim/neovim/wiki/Building-Neovim
+#   Built with:
+#     $ make distclean  # (or just `clean`)
+#     $ time make CMAKE_BUILD_TYPE=RelWithDebInfo \
+#                 CMAKE_EXTRA_FLAGS="-DCMAKE_INSTALL_PREFIX=$HOME/.local/neovim -DCMAKE_C_FLAGS='-march=native'"
+#     $ make install
+if [ -x ~/.local/neovim/bin/nvim ]; then
+  exec ~/.local/neovim/bin/nvim "$@"
+elif type -p nvim >/dev/null; then
   exec nvim "$@"
 elif type -p vim >/dev/null; then
   exec vim "$@"
