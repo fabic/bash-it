@@ -46,7 +46,7 @@ alias stw='st -w'
 # ^ Now using `wi` for another "what is..."
 
 # For your bin/s ripgrep wrapper script.
-[ `type -t s` == "alias" ] && unalias s
+[ "`type -t s`" == "alias" ] && unalias s
 
 if type -p fzf >/dev/null;
 then
