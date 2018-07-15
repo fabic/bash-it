@@ -42,10 +42,17 @@ searchdirs=(
     $user_home/dev/*/tmp/
     $user_home/dev/*/storage/logs/
     $user_home/dev/*/app/logs/
-    $user_home/dev/*/var/logs/
   )
 
-#echo "DEBUG: ${searchdirs[@]}" ; exit 1
+# Symfony
+[ -d var/log ] &&
+  searchdirs=( "${searchdirs[@]}" "$PWD/var/log/" )
+
+# Laravel
+[ -d storage/logs ] &&
+  searchdirs=( "${searchdirs[@]}" "$PWD/storage/logs/" )
+
+echo "| Will search directories: ${searchdirs[@]}"
 
 # Find log files in those search dirs., keep the most recent ones.
 logfiles=( /var/log/samba/?mbd.log

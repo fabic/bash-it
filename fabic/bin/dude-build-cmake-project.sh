@@ -2,6 +2,8 @@
 #
 # fabic/2016-06-20
 # fabic/2017-12-21: Extracted from that LLVM/Clang project of mine.
+# fabic/2018-07: this script... has become a bit "complicated"
+#                for what it is supposed to do, aah, entropy...
 
 # Synonym for $PWD, actually.
 here="$PWD"

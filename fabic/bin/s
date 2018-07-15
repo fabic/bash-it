@@ -44,14 +44,34 @@ echo "| In: $PWD"
 if [ ${#findargs[@]} ];
 then
 
-  # PHP/LARAVEL
-  if [ -f artisan ] && [ -d app ] && [ -d vendor ]; then
+  # PHP / Composer
+  if [ -f composer.json ]; then
     echo "+-"
-    echo "| Inferred we're in a PHP/Laravel project, will search dirs :"
-    skipdirs=( "${skipdirs[@]}" bootstrap storage tmp vendor )
+    echo "| Inferred we're in a PHP/Composer project, will exclude the vendor/ directory :"
+    skipdirs=( "${skipdirs[@]}" vendor )
     globs=( "${globs[@]}" -g \*.php -g \*.?css -g \*.scss -g \*.?html -g \*.yml -g \*.json )
     [ -d public ] && skipdirs=( "${skipdirs[@]}" public ) \
       && echo "| \`~> we'll exclude public/ too (!)"
+  fi
+
+  # PHP/LARAVEL
+  if [ -f artisan ] && [ -d app ] ; then
+    echo "+-"
+    echo "| Inferred we're in a PHP/Laravel project, will search dirs :"
+    skipdirs=( "${skipdirs[@]}" bootstrap storage tmp )
+    [ -d public ] && skipdirs=( "${skipdirs[@]}" public ) \
+      && echo "| \`~> we'll exclude public/ too (!)"
+  fi
+
+  # PHP / Symfony 4.x
+  if [ -f symfony.lock ] && [ -d templates ] && [ -d var ]; then
+    echo "+-"
+    echo "| Inferred we're in a Symfony4.x project, will search dirs :"
+    skipdirs=( "${skipdirs[@]}" var )
+    [ -d public/build/ ] && skipdirs=( "${skipdirs[@]}" public/build ) \
+      && echo "| \`~> we'll exclude public/build/ too (!)"
+    [ -d public/bundles/ ] && skipdirs=( "${skipdirs[@]}" public/bundles ) \
+      && echo "| \`~> we'll exclude public/bundles/ too (!)"
   fi
 
   # node_modules/

@@ -19,13 +19,26 @@ alias sl=ls
 #alias l1='ls -1'
 
 # FABIC: ^ my changes...
-alias ls='ls -G'        # Compact view, show colors
-alias ll='ls -lF'
-alias la='ll -a'       # Compact view, show hidden
-alias l='ls -F'
-alias l1='l -1sh'
-alias lh='ll -h'
-alias latr='la -tr'
+# https://the.exa.website/
+if type -p exa >/dev/null; then
+  alias lls="`type -P ls`"
+  alias ls='exa'
+  alias l1='ls -1'
+  alias lh='ls'
+  alias ll='ls -lgHS -@ --git --time-style=long-iso --header'
+  alias la='ll -a'
+  alias latr='ll -ar --sort=modified'
+  alias ltrh='ll -r --sort=modified'
+else
+  alias ls='ls -G'        # Compact view, show colors
+  alias ll='ls -lF'
+  alias la='ll -a'       # Compact view, show hidden
+  alias l='ls -F'
+  alias l1='l -1sh'
+  alias lh='ll -h'
+  alias latr='la -tr'
+  alias ltrh='ll -trh'
+fi
 
 #alias cdp='cd -P'
 # ^ FABIC 2017-11: Replace with a function.
