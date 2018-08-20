@@ -211,6 +211,8 @@ export EDITOR="vim"
 # Path to the bash it configuration
 if [ -d ~/.bash_it ]; then
     export BASH_IT="$HOME/.bash_it"
+elif [ -d "$HOME/bash-it" ]; then
+    export BASH_IT="$HOME/bash-it"
 elif [ -d "$HOME/dev/bash-it" ]; then
     export BASH_IT="$HOME/dev/bash-it"
 fi

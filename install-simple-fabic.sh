@@ -9,6 +9,7 @@ BASH_IT="${BASH_IT##/}"
 
 echo
 echo "\$BASH_IT = $BASH_IT"
+read -p "~~ ok to proceed ? ~~~"
 
 cd ~ || exit 1
 
@@ -38,7 +39,8 @@ fi
 
 echo "$0 : DONE."
 
-ln -sfnvb "../$BASH_IT/fabic/dot_config_sublime-text-3/" ~/.config/sublime-text-3
+[ -d "$BASH_IT/fabic/dot_config_sublime-text-3/Packages/" ] &&
+  ln -sfnvb "../$BASH_IT/fabic/dot_config_sublime-text-3/" ~/.config/sublime-text-3
 
 echo
 echo "Your Vim conf. is at fabic/dude.vim/"
