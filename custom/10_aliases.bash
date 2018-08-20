@@ -2,9 +2,9 @@
 #
 # F.2011-08-16 : Some custom miscellaneous aliases...
 
-if [ `uname -s` != 'Darwin'  ]; then
-    alias ls='ls --color=auto'
-fi
+#if [ `uname -s` != 'Darwin'  ]; then
+#    alias ls='ls --color=auto'
+#fi
 
 # Get rid of that minimalist Vim we often find here and there...
 alias vi=vim
@@ -13,7 +13,7 @@ alias vi=vim
 alias ebl='exec bash -l'
 
 # Ch.dir to my playground :
-alias pg='cd -P ~/dev/pg && ebl'
+#alias pg='cd -P ~/dev/pg && ebl'
 
 # Go to Sublime Text config. dir.
 alias stc='cd ~/.config/sublime-text-3 && exec bash -l'
@@ -22,7 +22,7 @@ alias stc='cd ~/.config/sublime-text-3 && exec bash -l'
 alias esu='exec sudo su -'
 
 
-# fixme
+# FIXME
 alias fu='/sbin/fuser -v'
 alias lsof='/usr/sbin/lsof'
 

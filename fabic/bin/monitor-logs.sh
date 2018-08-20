@@ -42,6 +42,7 @@ searchdirs=(
     $user_home/dev/*/tmp/
     $user_home/dev/*/storage/logs/
     $user_home/dev/*/app/logs/
+    $user_home/dev/*/var/log/
   )
 
 # Symfony
@@ -52,14 +53,37 @@ searchdirs=(
 [ -d storage/logs ] &&
   searchdirs=( "${searchdirs[@]}" "$PWD/storage/logs/" )
 
-echo "| Will search directories: ${searchdirs[@]}"
-
 # Find log files in those search dirs., keep the most recent ones.
 logfiles=( /var/log/samba/?mbd.log
            /var/log/fail2ban.log
            /var/log/fpm-php.www.log
-           $(find "${searchdirs[@]}" -iname '*log' -mtime -$mtime)
-           "$@" )
+          )
+
+# Identify directories from files from cli args.
+while [ $# -gt 0 ]; do
+  arg="$1"
+  shift
+  [ -d "$arg" ] &&
+    searchdirs=("${searchdirs[@]}" "$arg") ||
+      logfiles=("${logfiles[@]}" "$arg")
+done
+
+# Filter out directories we can't read.
+for i in ${!searchdirs[@]}; do
+  if [[ ! -r ${searchdirs[$i]} ]]; then
+    echo "| Skipping dir. '${searchdirs[$i]}' (doesn't exist / not readable)"
+    unset 'searchdirs[i]'
+  else
+    echo "| Will search dir. '${searchdirs[$i]}'"
+  fi
+done
+
+#echo "| Will search directories: ${searchdirs[@]}"
+
+# Find log files in those search dirs., keep the most recent ones.
+logfiles=( "${logfiles[@]}"
+           $(find "${searchdirs[@]}" -type f -iname '*log' -mtime -$mtime)
+          )
 
 # Discard files we can't read / do not exist.
 for i in ${!logfiles[@]}; do

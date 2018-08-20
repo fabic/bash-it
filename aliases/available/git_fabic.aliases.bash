@@ -57,9 +57,6 @@ alias gmu='g fetch origin -v; g fetch upstream -v; g merge upstream/master'
 
 alias gd='g diff --patience'
 alias gdc='gd --cached'
-alias gdhf='gd HEAD..FETCH_HEAD'
-alias gdmh='gd MERGE_HEAD..'
-alias gdhm='gd ..MERGE_HEAD'
 alias gdr='gd `gbr`...'
 alias gdrr='gd ...`gbr`'
 alias gdv='g diff -w "$@" | vim -R -'
@@ -70,7 +67,6 @@ alias gll='g log --graph --pretty=oneline --abbrev-commit'
 alias gl1='g log --oneline --graph --decorate --source'
 alias gl11='gl1 -1'
 alias glast='gl -1'
-alias glhf='gl HEAD..FETCH_HEAD'
 alias gg="git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr)%Creset' --abbrev-commit --date=relative"
 alias gga="git log --pretty=format:'%Cblue%ad%Creset - %Cred%h%Creset - %an - %s %C(yellow)%d%Creset %Cgreen(%cr)%Creset' --abbrev-commit --date=iso --date-order"
 alias ggm='gg `git merge-base HEAD origin/master`...'
@@ -80,6 +76,11 @@ alias ggg="gg -3"
 alias gsl="g shortlog -sn"
 alias gw="g whatchanged"
 alias gcount='g shortlog -sn'
+
+alias gdhf='gd HEAD..FETCH_HEAD'
+alias gdmh='gd MERGE_HEAD..'
+alias gdhm='gd ..MERGE_HEAD'
+alias glhf='gl HEAD..FETCH_HEAD'
 
 # From http://blogs.atlassian.com/2014/10/advanced-git-aliases/
 # Show commits since last pull
@@ -117,6 +118,8 @@ alias gsbm='gsbh origin/master'
 alias gsbd='gsbh origin/develop'
 alias gsbs='gsbh origin/staging'
 alias gsbo='gsbh origin/master origin/staging origin/develop'
+
+alias  gfsbr='gf && gsbr'
 
 # Compare branch with its upstream tracking branch,
 # i.e. git show branch develop develop@{u}
