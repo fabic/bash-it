@@ -10,6 +10,9 @@ prompt_setter() {
   PS1="(\t) [$blue\u$reset_color@$green\H$reset_color] $red\j $yellow\w${reset_color} $ "
   PS2='> '
   PS4='+ '
+
+  [ ! -z "${DUDE_BEWARE_ON_SERVER_YOU_ARE+x}" ] &&
+    PS1="$background_red$bold_white(!!!)$normal $PS1"
 }
 
 PROMPT_COMMAND=prompt_setter

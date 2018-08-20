@@ -26,6 +26,7 @@ if type -p exa >/dev/null; then
   alias l1='ls -1'
   alias lh='ls'
   alias ll='ls -lgHS -@ --git --time-style=long-iso --header'
+  alias l='ls -lg --git --time-style=long-iso --header'
   alias la='ll -a'
   alias latr='ll -ar --sort=modified'
   alias ltrh='ll -r --sort=modified'

@@ -18,13 +18,13 @@ if [ "$NonRootUser" = "root" ]; then
 fi
 
 dirlist=(
-  app/cache/
+  app/cache
   app/logs
-  var/cache/
-  var/logs
-  tmp/
-  web/
-  public/
+  var/cache
+  var/log
+  tmp
+  web
+  #public/_wdt/
 )
 
 for dir in "${dirlist[@]}"; do

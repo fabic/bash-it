@@ -215,6 +215,10 @@ elif [ -d "$HOME/dev/bash-it" ]; then
     export BASH_IT="$HOME/dev/bash-it"
 fi
 
+if [[ -e ~/.warn-server-guard ]]; then
+  export DUDE_BEWARE_ON_SERVER_YOU_ARE=1
+fi
+
 # Lock and Load a custom theme file
 # ( location ~/.bash_it/themes/ )
 export BASH_IT_THEME='fabi'
