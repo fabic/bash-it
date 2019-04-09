@@ -94,7 +94,7 @@ function f() {
       locations=( "${locations[@]}" "$arg" )
     else
       find_args=( "${find_args[@]}"
-        -o \( -type f \( -regextype egrep -iregex ".*$arg.*" \) -print \) )
+        -o \( \( -regextype egrep -iregex ".*$arg.*" \) -print \) )
     fi
   done
 

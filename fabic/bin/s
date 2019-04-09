@@ -79,12 +79,17 @@ then
     echo "+-"
     echo "| Found a \`node_modules/\` subdir."
     skipdirs=( "${skipdirs[@]}" dist node_modules )
-    globs=( "${globs[@]}" -g \*.js -g \*.json -g \*.vue -g \*.jsx )
+    globs=( "${globs[@]}" -g \*.js -g \*.json -g \*.jsonp -g \*.vue -g \*.jsx )
     # Also skip eventual dist/ & static/ files
     # (^ we didn't ensure we're in a "pure" Node.js project dir.,
     #    may be some PHP project or sthg else).
-    [ -d static ] && skipdirs=( "${skipdirs[@]}" static ) \
-      && echo "| \`~> we'll exclude static/ too."
+
+    # Let's not exclude static/ : it may contain stylesheets etc
+    #[ -d static ] && skipdirs=( "${skipdirs[@]}" static ) \
+    #  && echo "| \`~> we'll exclude static/ too."
+
+    [ -d dist ] && skipdirs=( "${skipdirs[@]}" dist ) \
+      && echo "| \`~> we'll exclude dist/ too."
   fi
 
 fi

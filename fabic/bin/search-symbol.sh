@@ -51,8 +51,8 @@ for path in "${paths[@]}"; do
     fi
 
     #readelf -sW "$library"
-    # `nm` is must slower, but clever:
-    #      > use -u (--undefined-only for display only external symbols).
+    # `nm` is much slower, but clever:
+    #      > use -u (--undefined-only for displaying only external symbols).
     #      > or --defined-only
     #      > -g will list all external symbols.
     #      > -l will display source code information if available.

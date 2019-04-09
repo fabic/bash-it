@@ -20,7 +20,7 @@ alias sl=ls
 
 # FABIC: ^ my changes...
 # https://the.exa.website/
-if type -p exa >/dev/null; then
+if false && type -p exa >/dev/null; then
   alias lls="`type -P ls`"
   alias ls='exa'
   alias l1='ls -1'
@@ -31,7 +31,7 @@ if type -p exa >/dev/null; then
   alias latr='ll -ar --sort=modified'
   alias ltrh='ll -r --sort=modified'
 else
-  alias ls='ls -G'        # Compact view, show colors
+  alias ls='ls -G --color=auto'        # Compact view, show colors
   alias ll='ls -lF'
   alias la='ll -a'       # Compact view, show hidden
   alias l='ls -F'

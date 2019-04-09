@@ -58,6 +58,7 @@ logfiles=( /var/log/samba/?mbd.log
            /var/log/fail2ban.log
            /var/log/fpm-php.www.log
           )
+           #"$(find ~/dev/ -maxdepth 5 -type f -name httpd-access.log -o -name httpd-errors.log)"
 
 # Identify directories from files from cli args.
 while [ $# -gt 0 ]; do

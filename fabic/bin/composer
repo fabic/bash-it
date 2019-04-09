@@ -2,6 +2,7 @@
 #
 # F/2018-05-08
 
+# i.e. typically a ~/bin/ symlink.
 here="$(cd `dirname "$0"` && pwd)"
 
 if [ ! -s "$here/composer.phar" ]; then

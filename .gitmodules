@@ -32,3 +32,6 @@
 [submodule "gogh-term-themes"]
 	path = fabic/3rdparty/gogh-terminal-themes
 	url = https://github.com/Mayccoll/Gogh.git
+[submodule "fabic/3rdparty/slugify"]
+	path = fabic/3rdparty/slugify
+	url = https://github.com/benlinton/slugify.git
