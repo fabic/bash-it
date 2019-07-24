@@ -1,0 +1,50 @@
+# .screenrc
+#
+# 2015-07-07 : Received this one from Hervé Toureille (Cines.fr)
+
+defscrollback 10000
+termcapinfo xterm|xterms|xs|rxvt ti@:te@
+hardstatus alwayslastline
+hardstatus string '%{= kG}[ %{G}%H %{g}][%= %{=kw}%?%-Lw%?%{r}(%{W}%n*%f%t%?(%u)%?%{r})%{w}%?%+Lw%?%?%= %{g}][%{B}%Y-%m-%d %{W}%c %{g}]'
+
+startup_message off     # set if you want to see copyright notice at startup (default on)
+vbellwait 0.1           # delay in seconds after each display of bell message (default 1s)
+vbell_msg "*ding*"      # Sets the visual bell message. (default "Wuff, Wuff!!")
+shell "bash"            # use bash shell
+
+# # backtick : command executed, output command is print where you wanted in the hardstatus
+# # here sys.sh will give us kernel-name & kernel-release. sys.sh do only uname -sr
+# # this script is relaunch every 10 min (600s)
+backtick 1 600 0 uname -sr
+
+# # if activity is detected on an affected window switched into the background
+# # you  will  receive the activity notification message in the status line
+# # the window will also be marked with an ‘@’ in the window-status display
+defmonitor on
+
+# # change the way screen does highlighting for text marking and printing messages
+sorendition "+b bw" # bold blanc sur rouge
+
+# # When  any activity occurs in a background window that is being monitored
+# # screen displays a notification in the message line
+activity "!!activity::%n%f %t:!!" # window number , flags of the window , window title
+
+# # Defines the time message is displayed (default 5s)
+msgwait 10
+
+# # Sets the visual bell message. message is printed to the status line
+# # Without parameter, the current message is shown.
+vbell_msg " *wtf?!* "
+
+# screens 
+
+#screen -t NOMDELACONSOL2 ssh LOGIN@MACHINE
+
+#screen -t fabic.net ssh fabi@fabic.net
+#screen -t Orion ssh orion
+#screen -t Orion ssh keros
+#screen -t Orion ssh syros
+#screen -t Orion ssh hera
+#screen -t Orion ssh prisca
+#screen -t Orion ssh xanthe
+ 
