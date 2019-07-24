@@ -1,25 +1,262 @@
 #!/usr/bin/env bash
 
+###
+# ~/.bashrc
+#
+# FABIC / fabic.net / Bash-it customization.
+#
+# Note to self :
+#
+#   Dude, this is `dot_bashrc` from your Bash-it personal fork.
+#
+#   This is sourced by `dot_bash_profile` **for interactive shells** ;
+#   Else (for non-interactive shells) Bash would source it itself.
+#
+#   You may want to use the `install.sh` script.
+#
+#   Some time ago, _they_ used to have these stuff in `dot_bash_profile`.
+#
+#   EDIT/2019-07-23: Re-synced wrt. upstream/master after a very long while.
+#
+###
+
 # If not running interactively, don't do anything
 case $- in
   *i*) ;;
     *) return;;
 esac
 
+# Sentinel variable for me to debug things, may have values 1,2,3
+# depending on where this script ended.
+export FABIC_BASHRC_SOURCED=1
+
+##
+# If the sentinel variable is set, stop here and now.
+# ^ not a good idea, one _needs_ to be able to reload its .bashrc on many
+#   circumstances.
+#
+# if [ ! -z ${FABIC_BASHRC_SOURCED+x} ]; then
+#   return
+# fi
+##
+
+
+                                ## FUNCTIONS ##
+
+function _is_interactive_shell() {
+  [[ $- == *i* ]] && return 0 || return 127
+}
+
+function _is_login_shell() {
+  shopt -q login_shell && return 0 || return 127
+}
+
+# See https://stackoverflow.com/a/30520299
+function _shell_has_terminal() {
+  [ -t 1 ] && return 0 || return 127
+}
+
+function _shell_stdout_is_redirected() {
+  [ -p /dev/stdout ] && return 0 || return 127
+}
+
+# Define the `echox()` wrapper function.
+#if _shell_has_terminal || _shell_stdout_is_redirected ; then
+# ^ DON'T: Causes Rsync to complain with “protocol version mismatch -- is your shell clean?”
+#          Test with: `ssh vps.fabic.net /bin/true > tutu.dat`
+if _shell_has_terminal ; then
+  function echox() {
+    echo "$@"
+  }
+else
+  function echox() {
+    true
+  }
+fi
+
+
+                                   ## MAIN ##
+
+# Test for an interactive shell.  There is no need to set anything
+# past this point for scp and rcp, and it's important to refrain from
+# outputting anything in those cases.
+if ! _is_interactive_shell ; then
+  # Shell is non-interactive.  Be done now!
+
+  # FIXME: (?) Dude, this ensures you will never have non-interactive SSH
+  # (FIXED)(?) connection like Rsync or whatever, that break unexpectedly
+  #        (?) due to some script writing to stdout/err where it shall not
+  #        (?) have.
+  #        (?) BUT: this also means that your environment customizations like
+  #        (?)      $PATH, etc, won't be processed at all.
+
+  # return
+  # ^ EDIT/2018-03-16: We're no longer stopping here, for I do need ~/.bashrc
+  #                    to set things up, without echoing anything though, so that
+  #                    I may run CRON/Systemd-timer scripts that source this script
+  #                    as needed.
+  #                    => hence `echo` is replaced with `echox()` ;
+  #                       and _is_interactive_shell() or _is_login_shell() are
+  #                       used where applicable.
+  false;
+fi
+
+FABIC_BASHRC_SOURCED=2
+
+
+                              ## SCREEN / TMUX ##
+
+## Auto-Screen ## (edit: this is your old setup).
+#                 (edit: indeed, 'tis quite old, not been using screen for long)
+#
+# Neutralized; read ahead...
+#
+# FABIC/2012-11-03
+# See http://geekscrap.com/2010/02/using-screen-as-your-login-shell/
+#
+##
+if false && _is_interactive_shell && _shell_has_terminal \
+         && [ "x`which screen 2> /dev/null`" != "x" -a ${SHLVL} -eq 1 ];
+then
+    ((SHLVL+=1)); export SHLVL
+    #exec screen -R -e "^Ee" ${SHELL} -l
+    screen -R -e "^Ee" ${SHELL} -l
+    ((SHLVL-=1)); export SHLVL
+    echox
+    echox "///////////////////////////////////////////////////////"
+    echox "~/.bash_profile: End of screen-itized session, SHLVL=$SHLVL"
+    echox "///////////////////////////////////////////////////////"
+    echox
+fi
+
+
+##
+# TMUX / Screen : re-attach to existing sessions automatically.
+#
+# Find out if we have any TMUX detached session and automatically re-attach
+# (note that this test of nested bash processes is _not_ totally correct,
+#  but works well in practice).
+##
+if true && _is_interactive_shell && _shell_has_terminal \
+        && [[ $SHLVL == 1 ]] && [ -z ${TMUX+x} ]; then
+    # TMUX !
+    if type -P tmux > /dev/null && tmux has-session 2> /dev/null ; then
+        if tmux attach ; then
+            echox
+            echox "# ${BASH_SOURCE[0]} : \`tmux attach\` terminated, ok."
+            echox
+        else
+            echox
+            echox "# ${BASH_SOURCE[0]} : WARNING: tmux attached terminated with non-zero exit status -_- (nevermind)"
+            echox
+        fi
+    fi
+    # SCREEN ? (TODO: chaining this here after we run Tmux ain't great, but you don't resort to Screen that often, so anyway...).
+    if type -P screen > /dev/null && [[ ! -z "$(screen -ls | grep '^\s*[0-9]*\.\S\+\s\+(Detached)\s*$')" ]]; then
+        if screen -r ; then
+            echox
+            echox "# ${BASH_SOURCE[0]} : “screen -r” terminated, ok."
+            echox
+        else
+            echox
+            echox "# ${BASH_SOURCE[0]} : WARNING: “screen -r” terminated with non-zero exit status -_- (nevermind)"
+            echox
+        fi
+    fi
+fi
+
+
+# TMUX: Inform user that he is run by tmux.
+if [ ! -z ${TMUX+x} ]; then
+  echox "FYI: We're being run by TMUX somehow here."
+  false && tmux list-session |& sed -e 's/^/       - /'
+  [ ! -S "${TMUX%%,*}" ] &&
+    echox "FYI: WARNING: \$TMUX='${TMUX%%,*}' is supposed to be a socket."
+fi
+
+                                   ## ~*~ ##
+
+##
+# Source the system-wide bashrc.
+#  `~> EDIT: this may or may not be a good thing, actually.
+##
+if true; then
+  echox "FYI: About to source the system-wide bashrc."
+  # CentOS
+  if [ -f /etc/bashrc ]; then
+    . /etc/bashrc
+  # Gentoo / Sabayon
+  elif [ -f /etc/bash/bashrc ]; then
+    . /etc/bash/bashrc
+  # Arch Linux, Debian/Kali.
+  elif [ -f /etc/bash.bashrc ]; then
+    . /etc/bash.bashrc
+  fi
+fi
+
+
+##
+# FABIC/2015-12-03
+#
+# Replace current bash process with a new one, needed here in .bashrc
+# so that I can quickly "boot" a new shell with Bash-it initialized.
+##
+alias ebl='exec bash -l'
+
+# Likewise: new root shell (and replace current process).
+alias esu='exec sudo su -'
+
+
+if _shell_has_terminal ; then
+  # FABIC/2015-12-03
+  # For Ctrl-S forward search ability (the converse of Ctrl-R) we're disabling
+  # the “stop scrolling terminal ctrl thing / signal”
+  stty stop ""
+
+  # check the window size after each command and, if necessary,
+  # update the values of LINES and COLUMNS.
+  shopt -s checkwinsize
+
+  # If set, the pattern "**" used in a pathname expansion context will
+  # match all files and zero or more directories and subdirectories.
+  shopt -s globstar
+
+  # make `less` more friendly for non-text input files, see lesspipe(1)
+  [ -x /usr/bin/lesspipe ] && eval "$(SHELL=/bin/sh lesspipe)"
+fi
+
+
+                                   ## ~*~ ##
+
+# FABIC: Group-work friendly umask now/here so that any of g+rwx is preserved,
+#        (done here early for Rsync/Scp/etc).
+umask 0002
+
+if [[ -e ~/.warn-server-guard ]]; then
+  export DUDE_BEWARE_ON_SERVER_YOU_ARE=1
+fi
+
+# FABIC/2011-08-16
+export LANG=en_US.UTF-8
+
+#export GIT_EDITOR='/usr/bin/mate -w'
+export EDITOR="vim"
+
 # Path to the bash it configuration
-export BASH_IT="/home/fabi/bash-it"
+export BASH_IT="$(cd `dirname "$(realpath "${BASH_SOURCE[0]}")"`/.. && pwd)"
 
 # Lock and Load a custom theme file.
 # Leave empty to disable theming.
 # location /.bash_it/themes/
-export BASH_IT_THEME='powerline-fabic'
+export BASH_IT_THEME='fabi'
+#export BASH_IT_THEME='powerline-fabic'
 
 # (Advanced): Change this to the name of your remote repo if you
 # cloned bash-it with a remote other than origin such as `bash-it`.
 # export BASH_IT_REMOTE='bash-it'
 
-# Your place for hosting Git repos. I use this for private repos.
-export GIT_HOSTING='git@git.domain.com'
+# Your place for hosting Git repos.
+export GIT_HOSTING='git@github.com:fabic'
 
 # Don't check mail when opening terminal.
 unset MAILCHECK
@@ -36,7 +273,7 @@ export SCM_CHECK=true
 # Set Xterm/screen/Tmux title with only a short hostname.
 # Uncomment this (or set SHORT_HOSTNAME to something else),
 # Will otherwise fall back on $HOSTNAME.
-#export SHORT_HOSTNAME=$(hostname -s)
+export SHORT_HOSTNAME=$(hostname -s)
 
 # Set Xterm/screen/Tmux title with only a short username.
 # Uncomment this (or set SHORT_USER to something else),
@@ -58,5 +295,390 @@ export SCM_CHECK=true
 # Uncomment this to make Bash-it create alias reload.
 # export BASH_IT_RELOAD_LEGACY=1
 
+# FABIC/2014-11-04 : Maven HOME, Java stuff.
+#export M2_HOME=/usr/share/maven-bin-3.0
+
+##
+# FABIC: For `custom/05_slash_opt_env.bash`: list of sub-directories under /opt
+#        there that follow the FHS-like layout (bin, etc, share/man, lib)
+##
+#SlashOptSubdirs=(  )
+#SlashOptSubdirs=( mercurial html_tidy apache php$PHP_VERSION git vim )
+
+## # # # # # # # # # # # # # #
 # Load Bash It
+## # # # # # # # # # # # # # #
 source "$BASH_IT"/bash_it.sh
+
+                            ## POST BASH-IT LOADED ##
+
+##
+# FABIC/2011-08-16
+# Prompt color, slightly modified from BLFS.
+# Setup a red prompt for root and a green one for users.
+# Gentoo's PS1 : \[\033[01;32m\]\u@\h\[\033[01;34m\] \w \$\[\033[00m\]
+##
+if false; then
+  NORMAL="\[\e[0m\]"
+  RED="\[\e[1;31m\]"
+  GREEN="\[\e[1;32m\]"
+  CYAN="\[\e[1;36m\]"
+  YELLOW="\[\e[33;1m\]"
+  WHITE="\[\e[37;1m\]"
+  if [[ $EUID == 0 ]] ; then
+      USERATHOST=$RED
+  else
+      USERATHOST=$GREEN
+  fi
+  PS1="$USERATHOST\u@\h $YELLOW\j $WHITE\w $USERATHOST\\$ $NORMAL"
+  PS2="$USERATHOST> $NORMAL"
+fi
+
+
+##
+# gVim forks a shell in a 'dumb' terminal that do not comprehend colors,
+# hence we're setting up a simpler PS1/2 prompt here.
+##
+if [ "$TERM" == "dumb" ] && [ ! -z ${PS1+x} ]; then
+  echox "# FYI: dumb terminal detected (\$TERM='$TERM') => adjusting prompt (w/o colors)."
+  [ -n "$PROMPT_COMMAND" ] && unset PROMPT_COMMAND
+  PS1="(\t) [\u@\H] \j \w $ "
+  PS2=''
+  PS4='+ '
+  echox "#      \`-> PS1='$PS1'"
+fi
+
+
+# Further aliases may be defined per home@host.
+if [ -f ~/.bash_aliases ]; then
+  echox "FYI: Found ~/.bash_aliases, sourcing it."
+  . ~/.bash_aliases
+fi
+
+
+##
+# Host-local ~/.bashrc.d/ : may contain some .sh / .bash scripts that are
+# local to the system.
+#
+# FABIC/2011-08-16 : Source additional shell scripts that I do not include
+#                    in my Bash-it repo. (ex. per machine scripts)...
+##
+if [ -d ~/.bashrc.d/ ]; then
+  for script in $(find ~/.bashrc.d/ -name \*.sh -o -name \*.bash); do
+    echox "# Sourcing shell script '$script'"
+    [ -r "$script" ] && source "$script"
+  done
+fi
+
+
+##
+# Start an SSH Agent... (FIXME: is this fine ? -> review this)
+# @link http://unix.stackexchange.com/a/90869
+# ( See also the SSH_ASKPASS setup somewhere here ).
+##
+if _is_login_shell \
+    && ( [ -z "$SSH_AUTH_SOCK" ] || [ ! -S "$SSH_AUTH_SOCK" ] ) ;
+then
+    echox "# FYI: Dude, starting ssh-agent from ${BASH_SOURCE[0]}"
+    echox "# BTW: This may _not_ be what you want (!!)"
+    eval `ssh-agent -s`
+    # TODO: ^ check exit status or sthg ?
+    #ssh-add
+    echox
+fi
+
+##
+# SSH agent: If the agent is running then we're on the "local" machine (probably
+#            not in a remote shell) => check that the agent has at least one key
+#            and add it if not.
+##
+if _is_login_shell && [ -n "$SSH_AUTH_SOCK" ]     \
+                   && [ ! -z ${SSH_AGENT_PID+x} ] \
+                   && [ $SSH_AGENT_PID -gt 0 ]    ;
+then
+  if ! ssh-add -l >/dev/null 2>&1 ; then
+    echox -e "# \e[31m (!!)\e[0m SSH agent has no keys."
+    if [ -r ~/.ssh/id_rsa ]; then
+      echox -e "# \e[31m   \`\e[0m Adding key ~/.ssh/id_rsa"
+      if ! ssh-add ~/.ssh/id_rsa ; then
+        echox -e "# \e[31m    \` (!!!)\e[0m WARNING: \`ssh-add ~/.ssh/id_rsa\` failed (!)"
+      fi
+    else
+      echox -e "# \e[31m   \` (!)\e[0m Found no ~/.ssh/id_rsa key."
+    fi
+  else
+    echox -e "# SSH agent has key(s):"
+    ssh-add -l | sed -e 's/^/# - /'
+  fi
+fi
+
+
+##
+# SSH: Seahorse wrapper script for “SSH ask pass” instrumentation, which
+#      hardly ever works as expected btw.
+##
+# FABIC/2014-08-18 : temp. here (shall I set this in ~/.xinit ot xsession ?
+#export SSH_ASKPASS=/usr/lib64/seahorse/seahorse-ssh-askpass
+if false && [ -x ~/bin/seahorse_wrapper.sh -a -z "$SSH_ASKPASS" ]; then
+    export SSH_ASKPASS=~/bin/seahorse_wrapper.sh
+fi
+# FIXME:^ move that script under ur custom/ dir. ? or have a dedicated bin/ ?
+
+
+##
+# X11 $DISPLAY last resort auto-setup, this is _not_ want you generally want
+# but this does "solve" a few problems the absurd/incorrect way admittedly,
+# and you really do not want to read again about how to setup X11 authN/Z,
+# I mean, really.
+##
+if [ -z "$DISPLAY" ] && [ ! -z "$SSH_CONNECTION" ];
+then
+    export DISPLAY="${SSH_CONNECTION%% *}:0"
+    echox
+    echox "# WARN: Dude! \$DISPLAY is not set, and it happens that you're doing"
+    echox "#       SSH here, so we are inferring \$DISPLAY='$DISPLAY'"
+    echox "#       in the unlikely case you would like to forward back some X11..."
+    echox "#       (like issuing \`xhost +\` from whence you came, or whatever)"
+    echox
+fi
+
+
+##
+# FABIC: Ruby GEMs bin. dir. (fixme: dirty).
+#        (skept if RVM is installed).
+##
+if [ -d ~/.gem/ruby/ ];
+then
+  echox "FYI: Found some Ruby stuff under ~/.gem/ruby/..."
+  rubies=( $(ls -1d ~/.gem/ruby/*/bin | sort -Vr) )
+  if [ ${#rubies[@]} -gt 0 ]; then
+    if [ -d ~/.rvm/bin/rvm ]; then
+      echox "     ^ Skipping \$PATH setup : RVM is installed."
+    else
+      echox "     ^ Adding Ruby GEM bin. dir. '${rubies[0]}'."
+      pathprepend "${rubies[0]}"
+    fi
+  else
+    echox "     ^ Found no ~/.gem/ruby/*/bin/ GEM bin. dir."
+  fi
+  unset rubies
+fi
+
+
+##
+# Ruby RVM
+##
+if [ -x ~/.rvm/bin/rvm ]; then
+  echox "FYI: Found RVM (Ruby Versions Manager)."
+  pathprepend $HOME/.rvm/bin
+  if [ -s "$HOME/.rvm/scripts/rvm" ]; then
+    source "$HOME/.rvm/scripts/rvm"
+    echox "     ^ Sourced RVM shell script '$HOME/.rvm/scripts/rvm'."
+  fi
+fi
+
+
+## Android SDKs ##
+#
+# F/2019-06
+#
+# TODO: MOVE THIS OUTTA HERE INTO A DEDICATED SCRIPT OR STHG
+#       -> maybe just have a manual script to invoke when doing Android stuff.
+#
+##
+if false && [[ -d $HOME/Android/Sdk ]];
+then
+  echox -e "Found your \e[32mAndroid\e[0m stuff at \`\e[33m$HOME/Android/Sdk/\e[0m\`"
+
+  if [[ -z $ANDROID_HOME ]]; then
+    export ANDROID_HOME="$HOME/Android/Sdk"  # (deprecated it appears; 2019-06)
+    export ANDROID_SDK_ROOT="$HOME/Android/Sdk"
+    echox -e "  \`~> Set \e[1mANDROID_HOME\e[0m = $ANDROID_HOME  \e[39;2m(deprecated)\e[0m"
+    echox -e "  \`~> Set \e[1mANDROID_SDK_ROOT\e[0m = $ANDROID_SDK_ROOT"
+  else
+    [[ $ANDROID_HOME != "$HOME/Android/Sdk" ]] \
+      && echox -e "  \`~> \e[31m(!)\e[0m \$ANDROID_HOME was _already_ set: $ANDROID_HOME" \
+      && echox -e "      (instead of: $HOME/Android/Sdk)"
+  fi
+
+  # Add to $PATH
+  if ! type -p andoid emulator sdkmanager >/dev/null ;
+  then
+    pathprepend "$ANDROID_HOME/tools"
+    pathprepend "$ANDROID_HOME/tools/bin"
+    pathprepend "$ANDROID_HOME/platform-tools"
+    echox -e "  \`~> Modified \e[1mPATH\e[0m with Android SDK's tools/{,bin/} & platform-tools/ :"
+    echox "      \`android\` is: $(type -p android)"
+    echox "      \`emulator\` is: $(type -p emulator)"
+    echox "      \`sdkmanager\` is: $(type -p sdkmanager)"
+    [[ -d $ANDROID_HOME/tools ]]     || echox "  \`~> [W] $ANDROID_HOME/tools/ does not exist."
+    [[ -d $ANDROID_HOME/tools/bin ]] || echox "  \`~> [W] $ANDROID_HOME/tools/bin/ does not exist."
+    [[ -d $ANDROID_HOME/platform-tools ]] || echox "  \`~> [W] $ANDROID_HOME/platform-tools/ does not exist."
+  else
+    echox -e "  \`~> \e[31m(!)\e[0m beware: didn't modify \$PATH since we could find \`android' and \`emulator' already :"
+    echox "                $(echo `type -p android emulator`)"
+  fi
+
+  # Find out where is installed Android Studio,
+  # we (just) want to find Gradle and add it to $PATH.
+  if true; then
+    AndroidStudioPaths=(
+        "$( ls -1 ~/.local/share/JetBrains/Toolbox/apps/AndroidStudio/ch-*/*/bin/studio.sh 2>/dev/null | sort -V | tail -n1 | xargs -n1 dirname | xargs -n1 dirname)"
+        "$( ls -1 /opt/android-studio/bin/studio.sh 2>/dev/null | sort -V | tail -n1 | xargs -n1 dirname | xargs -n1 dirname)"
+    )
+
+    if [[ ${#AndroidStudioPaths[@]} -lt 1 ]]; then
+      echox -e "  \`~> \e[31m(!)\e[0m Could not find any Android Studio installation."
+      echox    "      (we won't search for Gradle)"
+    else
+      echox -e "  \`~> Found \e[94mAndroid Studio\e[0m :"
+      for _sw_path in "${AndroidStudioPaths[@]}"; do
+        echox "      - $_sw_path"
+      done
+      unset _sw_path
+
+      # Pick the first one
+      AndroidStudioPath="${AndroidStudioPaths[0]}"
+      echox "  \`~> picked: $AndroidStudioPath"
+
+      GradlePath="$( ls -1 "$AndroidStudioPath"/gradle/gradle-*/bin/gradle 2>/dev/null | xargs -n1 dirname)"
+      if [[ ! -z "$GradlePath" ]]; then
+        echox -e "  \`~> found \e[94mgradle\e[0m at $GradlePath"
+        type -p gradle >/dev/null \
+            && echox -e "      \e[31mBeware!\e[0m can already find \`gradle\` in \$PATH: $(type -p gradle)"
+        echox -e "      (added to \e[1m\$PATH\e[0m)"
+        pathprepend "$GradlePath"
+        # It's often missing the exec. bit -> fix this (Cordova complains)
+        [[ ! -x $GradlePath/gradle ]] \
+            && chmod +x "$GradlePath/gradle" \
+            && echox -e "      \e[1m[fixed gradle mode +x]\e[0m"
+      else
+        echox -e "  \`~> \e[31m(!)\e[0m Could NOT find Gradle !  :-/"
+      fi
+    fi
+
+    unset GradlePath AndroidStudioPath AndroidStudioPaths
+  fi
+fi
+
+
+##
+# PHP / Composer.phar "globally" installed stuff, for ex. with :
+#   ` composer.phar global require fabpot/php-cs-fixer `
+##
+[ -d ~/.composer/vendor/bin ] && pathprepend ~/.composer/vendor/bin
+# _
+# |
+# `~> it appears this was relocated under ~/.config/  [2018-05].
+[ -d ~/.config/composer/vendor/bin ] && pathprepend ~/.config/composer/vendor/bin
+
+
+                                 ## MAC OS X ##
+
+if false; then
+  # MacPorts installs its stuff there.
+  [ -d /opt/local/bin ]  && pathprepend /opt/local/bin
+  [ -d /opt/local/sbin ] && pathprepend /opt/local/sbin
+
+  # Max OS X : Liip's PHP. MySQL.
+  [ -d /usr/local/php5/bin ]  && pathprepend /usr/local/php5/bin
+  [ -d /usr/local/mysql/bin ] && pathprepend /usr/local/mysql/bin
+fi
+
+
+# FABIC.2010-08-16 : Additional binary paths.
+[ -d ~/local/bin ]  && pathprepend ~/local/bin
+[ -d ~/.local/bin ] && pathprepend ~/.local/bin
+
+
+##
+# Node.js pre-compiled binaries from https://nodejs.org/ (FABIC.2017-08-29 ).
+##
+nodejs_local_binary_dist="$( (ls -1d ~/.local/node-v*-linux-* | sort -V | tail -n1) 2> /dev/null )"
+if [ -d "${nodejs_local_binary_dist}" ] \
+      && [ -x "$nodejs_local_binary_dist/bin/node" ];
+then
+  echox "FYI: Found Node.js at '$nodejs_local_binary_dist/bin/node'"
+  pathprepend "$nodejs_local_binary_dist/bin" PATH
+  pathprepend "$nodejs_local_binary_dist/include" INCLUDE
+  #pathprepend "$nodejs_local_binary_dist/share/man" MANPATH
+  # ^ DON'T -_- `man` ain't no smart at all.
+fi
+unset nodejs_local_binary_dist
+
+
+##
+# Rust! ( https://www.rust-lang.org/ )
+##
+if [ -f "$HOME/.cargo/bin/rustc" ]; then
+  echox "FYI: Dude, do some Rust coding or you might rust o_o"
+  pathprepend "$HOME/.cargo/bin"
+fi
+
+##
+# `~/bin` shall come last so that I can override about anything.
+#
+# Remember that you typically symlink `bash-it/fabic/bin/` as `~/bin/`
+##
+[ -d ~/bin ] && pathprepend ~/bin
+
+
+## Python pipenv ##
+#
+# https://docs.pipenv.org/en/latest/
+# https://docs.pipenv.org/en/latest/install/#virtualenv-mapping-caveat
+#
+# Note: having `PIPENV_VENV_IN_PROJECT=x` messes up when you're playing with
+#       a "shared" source tree with your Docker stuff.
+##
+if type -p pipenv >/dev/null; then
+  #export PIPENV_VENV_IN_PROJECT=x    # creates .venv in project directory.
+  export PIP_IGNORE_INSTALLED=1      # ?
+  export PIPENV_INSTALL_TIMEOUT=300  # 5 minutes (default is wait up to 15 minutes!)
+  export PIPENV_MAX_RETRIES=1        # default is 0
+fi
+
+
+##
+# Print out some environment variables :
+##
+if true; then
+  echox "Your environment, some of it :"
+  for e in SHLVL DISPLAY EDITOR LANG LD_LIBRARY_PATH PATH SSH_CONNECTION SSH_ASKPASS SSH_AUTH_SOCK MANPATH TMUX INCLUDE ;
+  do
+    if [ ! -z ${!e+x} ]; then
+      echox -e "   \e[1m$e\e[0m = ${!e}"
+    fi
+  done
+fi
+
+
+##
+# Print out the path of some executables.
+##
+if true; then
+  Clang="$(type -p clang)"
+  Rust="$(type -p rustc)"
+  NodeJS="$(type -p node || type -p nodejs)"
+  JavaC="$(type -p javac)"
+  Php="$(type -p php)"
+  Python="$(type -p python)"
+  Ruby="$(type -p ruby)"
+
+  for vname in Clang Rust NodeJS JavaC Php Python Ruby ; do
+    if [ ! -z "${!vname}" ]; then
+      if [ -L "${!vname}" ]; then
+        echox -e "> \e[94m$vname\e[0m is \e[96m${!vname} \e[39;2m--symlink-to-->\e[22;34m $(readlink -m "${!vname}")\e[0m"
+      else
+        echox -e "> \e[94m$vname\e[0m is \e[34m${!vname}\e[0m"
+      fi
+    fi
+  done
+
+  unset Clang Rust NodeJS JavaC Php Ruby
+fi
+
+
+FABIC_BASHRC_SOURCED=3
+
+# vim: ft=sh et ts=4 sts=4 sw=4

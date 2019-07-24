@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# FabiC.2012--2015 : dot_bash_profile
+
+#[[ -f ~/.bashrc ]] && . ~/.bashrc
+
+# This file is sourced by bash for login shells.  The following line
+# runs your .bashrc and is recommended by the bash info pages.
+# FABIC/2017-02-12 : Note that Bash-it moved everything to .bashrc "recently".
+if true && [ -f ~/.bashrc ]; then
+    echo "FYI: About to source your ~/.bashrc  [${BASH_SOURCE[0]}]"
+    . ~/.bashrc
+    echo "FYI: Sourced your ~/.bashrc [${BASH_SOURCE[0]}]"
+fi
+
+# We're _not_ sourcing that thing.
+if [ -s ~/.profile ]; then
+  echo "WARN: Dude, you happen to have a ~/.profile script, and we're _not_ sourcing it."
+  echo "      (because things end up getting messy when you do)."
+fi
