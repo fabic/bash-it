@@ -1,9 +1,8 @@
 # custom/01_functions.bash @ https://github.com/fabic/bash-it
-#
-# F.2011-08-16 : From LFS (http://www.linuxfromscratch.org/blfs/view/stable/postlfs/profile.html)
 
 # Functions to help us manage paths.  Second argument is the name of the
 # path variable to be modified (default: PATH)
+# F.2011-08-16 : From LFS (http://www.linuxfromscratch.org/blfs/view/stable/postlfs/profile.html)
 pathremove () {
         local IFS=':'
         local NEWPATH
@@ -331,4 +330,14 @@ function cdp()
     fi
 }
 
+function pk()
+{
+  if pgrep -af "$@" ; then
+    echo
+    read -p " ~> Ok to kill ?  (Ctrl-C to abort)"
+    sudo pkill -f "$@"
+  else
+    echo "Nope :/"
+  fi
+}
 # vi: ft=sh et ts=2 sts=2 sw=2

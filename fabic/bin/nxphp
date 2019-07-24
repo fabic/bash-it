@@ -5,8 +5,13 @@
 # Run PHP _without_ XDebug enabled.
 # (see also the counterpart wrapper script: xphp)
 
+
+# You intalled php-7.2 from the AUR 2019-04-15
+PHPBIN=php72
+
 cmd=(
-  php -dxdebug.remote_enable=0
+  $PHPBIN
+      -dxdebug.remote_enable=0
       -dxdebug.remote_autostart=Off
       -dxdebug.idekey=PHPSTORM
       -dxdebug.remote_host=127.0.0.1

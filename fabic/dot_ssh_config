@@ -9,3 +9,10 @@ Host *
   ControlPersist 1h
   # Note the _always_ forwarding agent is questionable (!)
   ForwardAgent yes
+
+
+# Note: see also /etc/hosts
+Host matydiskstation mds matydiskstation.* matydiskstation.synology.me
+  User fabic
+  # Port 1984
+

@@ -26,6 +26,9 @@ alias esu='exec sudo su -'
 alias fu='/sbin/fuser -v'
 alias lsof='/usr/sbin/lsof'
 
+alias ipr='ip -c route'
+alias ipa='ip -c addr'
+
 alias papache='( httpd_pids=`pgrep -u $USER,apache,root httpd` ; [ ! "$httpd_pids" ] || ps -H u -p $httpd_pids )'
 
 # Screen :

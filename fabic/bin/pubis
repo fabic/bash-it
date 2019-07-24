@@ -7,7 +7,7 @@
 commands=(
     # Go with a DNS query @ OpenDNS if we have the `dig` utility.
     # (NOTE: must be the first entry, see EOF case in dns)...
-    "(type -p dig >/dev/null && dig +short myip.opendns.com @resolver1.opendns.com)"
+    "(type -p dig >/dev/null && dig @resolver1.opendns.com myip.opendns.com +short)"
 
     "curl -s ipinfo.io/ip"
     "(curl -s ipecho.net/plain && echo)"

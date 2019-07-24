@@ -6,12 +6,16 @@
 #
 # https://xdebug.org/docs/profiler
 
+# You intalled php-7.2 from the AUR 2019-04-15
+PHPBIN=php72
+
 profilerOutputDir="."
 [ -d ./tmp ] &&
   profilerOutputDir="$PWD/tmp/"
 
 cmd=(
-  php -dxdebug.remote_enable=1
+  $PHPBIN
+      -dxdebug.remote_enable=1
       -dxdebug.remote_autostart=On
       -dxdebug.idekey=PHPSTORM
       -dxdebug.remote_host=127.0.0.1

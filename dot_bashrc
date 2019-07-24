@@ -401,6 +401,86 @@ if [ -d ~/.bashrc.d/ ]; then
 fi
 
 
+## Android SDKs ##
+#
+# F/2019-06
+#
+if [[ -d $HOME/Android/Sdk ]];
+then
+  echox -e "Found your \e[32mAndroid\e[0m stuff at \`\e[33m$HOME/Android/Sdk/\e[0m\`"
+
+  if [[ -z $ANDROID_HOME ]]; then
+    export ANDROID_HOME="$HOME/Android/Sdk"  # (deprecated it appears; 2019-06)
+    export ANDROID_SDK_ROOT="$HOME/Android/Sdk"
+    echox -e "  \`~> Set \e[1mANDROID_HOME\e[0m = $ANDROID_HOME  \e[39;2m(deprecated)\e[0m"
+    echox -e "  \`~> Set \e[1mANDROID_SDK_ROOT\e[0m = $ANDROID_SDK_ROOT"
+  else
+    [[ $ANDROID_HOME != "$HOME/Android/Sdk" ]] \
+      && echox -e "  \`~> \e[31m(!)\e[0m \$ANDROID_HOME was _already_ set: $ANDROID_HOME" \
+      && echox -e "      (instead of: $HOME/Android/Sdk)"
+  fi
+
+  # Add to $PATH
+  if ! type -p andoid emulator sdkmanager >/dev/null ;
+  then
+    pathprepend "$ANDROID_HOME/tools"
+    pathprepend "$ANDROID_HOME/tools/bin"
+    pathprepend "$ANDROID_HOME/platform-tools"
+    echox -e "  \`~> Modified \e[1mPATH\e[0m with Android SDK's tools/{,bin/} & platform-tools/ :"
+    echox "      \`android\` is: $(type -p android)"
+    echox "      \`emulator\` is: $(type -p emulator)"
+    echox "      \`sdkmanager\` is: $(type -p sdkmanager)"
+    [[ -d $ANDROID_HOME/tools ]]     || echox "  \`~> [W] $ANDROID_HOME/tools/ does not exist."
+    [[ -d $ANDROID_HOME/tools/bin ]] || echox "  \`~> [W] $ANDROID_HOME/tools/bin/ does not exist."
+    [[ -d $ANDROID_HOME/platform-tools ]] || echox "  \`~> [W] $ANDROID_HOME/platform-tools/ does not exist."
+  else
+    echox -e "  \`~> \e[31m(!)\e[0m beware: didn't modify \$PATH since we could find \`android' and \`emulator' already :"
+    echox "                $(echo `type -p android emulator`)"
+  fi
+
+  # Find out where is installed Android Studio,
+  # we (just) want to find Gradle and add it to $PATH.
+  if true; then
+    AndroidStudioPaths=(
+        "$( ls -1 ~/.local/share/JetBrains/Toolbox/apps/AndroidStudio/ch-*/*/bin/studio.sh 2>/dev/null | sort -V | tail -n1 | xargs -n1 dirname | xargs -n1 dirname)"
+        "$( ls -1 /opt/android-studio/bin/studio.sh 2>/dev/null | sort -V | tail -n1 | xargs -n1 dirname | xargs -n1 dirname)"
+    )
+
+    if [[ ${#AndroidStudioPaths[@]} -lt 1 ]]; then
+      echox -e "  \`~> \e[31m(!)\e[0m Could not find any Android Studio installation."
+      echox    "      (we won't search for Gradle)"
+    else
+      echox -e "  \`~> Found \e[94mAndroid Studio\e[0m :"
+      for _sw_path in "${AndroidStudioPaths[@]}"; do
+        echox "      - $_sw_path"
+      done
+      unset _sw_path
+
+      # Pick the first one
+      AndroidStudioPath="${AndroidStudioPaths[0]}"
+      echox "  \`~> picked: $AndroidStudioPath"
+
+      GradlePath="$( ls -1 "$AndroidStudioPath"/gradle/gradle-*/bin/gradle 2>/dev/null | xargs -n1 dirname)"
+      if [[ ! -z "$GradlePath" ]]; then
+        echox -e "  \`~> found \e[94mgradle\e[0m at $GradlePath"
+        type -p gradle >/dev/null \
+            && echox -e "      \e[31mBeware!\e[0m can already find \`gradle\` in \$PATH: $(type -p gradle)"
+        echox -e "      (added to \e[1m\$PATH\e[0m)"
+        pathprepend "$GradlePath"
+        # It's often missing the exec. bit -> fix this (Cordova complains)
+        [[ ! -x $GradlePath/gradle ]] \
+            && chmod +x "$GradlePath/gradle" \
+            && echox -e "      \e[1m[fixed gradle mode +x]\e[0m"
+      else
+        echox -e "  \`~> \e[31m(!)\e[0m Could NOT find Gradle !  :-/"
+      fi
+    fi
+
+    unset GradlePath AndroidStudioPath AndroidStudioPaths
+  fi
+fi
+
+
 # PHP / Composer.phar "globally" installed stuff, e.g.
 #   `` composer.phar global require fabpot/php-cs-fixer `` :
 [ -d ~/.composer/vendor/bin ] && pathprepend ~/.composer/vendor/bin
@@ -440,6 +520,20 @@ fi
 # `~/bin` shall come last so that I can override about anything.
 # ( Remember that you typically symlink `bash-it/fabic/bin/` as `~/bin/` )
 [ -d ~/bin ] && pathprepend ~/bin
+
+
+## Python pipenv
+# https://docs.pipenv.org/en/latest/
+# https://docs.pipenv.org/en/latest/install/#virtualenv-mapping-caveat
+#
+# Note: having `PIPENV_VENV_IN_PROJECT=x` messes up when you're playing with
+#       a "shared" source tree with your Docker stuff.
+if type -p pipenv >/dev/null; then
+  #export PIPENV_VENV_IN_PROJECT=x    # creates .venv in project directory.
+  export PIP_IGNORE_INSTALLED=1      # ?
+  export PIPENV_INSTALL_TIMEOUT=300  # 5 minutes (default is wait up to 15 minutes!)
+  export PIPENV_MAX_RETRIES=1        # default is 0
+fi
 
 
 # FABIC: gVim forks a shell in a 'dumb' terminal that do not comprehend colors,
