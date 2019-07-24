@@ -248,8 +248,8 @@ export BASH_IT="$(cd `dirname "$(realpath "${BASH_SOURCE[0]}")"`/.. && pwd)"
 # Lock and Load a custom theme file.
 # Leave empty to disable theming.
 # location /.bash_it/themes/
-export BASH_IT_THEME='fabi'
-#export BASH_IT_THEME='powerline-fabic'
+#export BASH_IT_THEME='fabi'
+export BASH_IT_THEME='powerline-fabic'
 
 # (Advanced): Change this to the name of your remote repo if you
 # cloned bash-it with a remote other than origin such as `bash-it`.
@@ -339,7 +339,8 @@ fi
 # gVim forks a shell in a 'dumb' terminal that do not comprehend colors,
 # hence we're setting up a simpler PS1/2 prompt here.
 ##
-if [ "$TERM" == "dumb" ] && [ ! -z ${PS1+x} ]; then
+if [ "$TERM" == "dumb" ] && [ ! -z ${PS1+x} ] ;
+then
   echox "# FYI: dumb terminal detected (\$TERM='$TERM') => adjusting prompt (w/o colors)."
   [ -n "$PROMPT_COMMAND" ] && unset PROMPT_COMMAND
   PS1="(\t) [\u@\H] \j \w $ "
