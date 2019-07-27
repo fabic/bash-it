@@ -1,7 +1,20 @@
+##
+# lib/custom.bash
+#
+# F/2011
+##
 
+
+##
+# pathappend, pathprepend & pathremove
+#
 # Functions to help us manage paths.  Second argument is the name of the
 # path variable to be modified (default: PATH)
+#
 # F.2011-08-16 : From LFS (http://www.linuxfromscratch.org/blfs/view/stable/postlfs/profile.html)
+#
+##
+
 pathremove () {
         local IFS=':'
         local NEWPATH
@@ -27,6 +40,7 @@ pathappend () {
         export $PATHVARIABLE="${!PATHVARIABLE:+${!PATHVARIABLE}:}$1"
 }
 
+
 # “Vim in dir.” :
 #    Open Vim in the specified directory,
 #    by ch. dir. into it first.
@@ -39,6 +53,7 @@ vin() {
     popd
 }
 
+
 ## Wrapper for `realpath`
 # As a function instead of a bash alias since I'll need to adjust this so as
 # to cope with MacOSX having a realpath that differs slightly in behavior.
@@ -46,41 +61,75 @@ function rp() {
   realpath "$@"
 }
 
-# x == xdg-open
-# ^ I never use 'X' for anything from the command line, like e.g. x=...
+
+##
+# x -> xdg-open
+# |
+# `~> but then you can't use `` x ´´ as a variable
+#     (but you hardly ever do this anyway)
+##
 function x() {
     xdg-open "$@"
 }
 
+
+##
 # Source tree: ignores .git, vendor, node_modules, ...
-# Borrowed from `../aliases/enabled/general.aliases.bash`
+#
+# Borrowed from `../aliases/available/general.aliases.bash`
+##
 function stree() {
-  find -type d \( -name node_modules -o -name vendor -o -name cache -o -name tmp \
-                  -o -name .git -o -name .svn -o -name img -o -name images \) -prune \
+  find -type d \( -name node_modules -o -name vendor -o -name cache            \
+                  -o -name tmp -o -name __pycache__                            \
+                  -o -name .git -o -name .svn -o -name img -o -name images     \
+               \) -prune                                                       \
     -o "$@" -print | sed -e 's;[^/]*/;|____;g;s;____|; |;g'
 }
 
-# `F` : Fetch some HTTP resource with Curl (output piped through less).
-# TODO: enhance so as to prepend a missing http:// prefix so that one do not have to type it.
-function F() {
-  local -a args=( "$@" )
-  curl --dump-header /dev/stderr \
-    "${args[@]}" \
-    | ( [ -p /dev/stdout ] && cat || vim -R -)
-  # ^ if stdout is not redirected => open with Vim.
+
+# @see alias tree='find . -print | sed -e '\''s;[^/]*/;|____;g;s;____|; |;g'\'''
+function ftree()
+{
+	local -a in_dirs=( "$1" ) ; shift
+	find "${in_dirs[@]}" -type d ${@:+-o \( "$@" \)} |
+		sort -df |
+		sed -e 's@[^/]*/@|__@g;s@__|@ |@g'
+		#cat
+	return $?
 }
 
+
+##
+# `F` : Fetch some HTTP resource with Curl (output piped through less).
+#
+# TODO: enhance so as to prepend a missing http:// prefix so that one do not have to type it.
+##
+function F() {
+  local -a args=( "$@" )
+  curl --dump-header /dev/stderr "${args[@]}"  \
+    | ( [ -p /dev/stdout ] && cat || vim -R -)
+    # ^ if stdout is not redirected => open with Vim.
+}
+
+
+##
 # `f <regex1> [<regex2>|<dir>]*`
+#
 # Find files matching a regex (egrep type).
+#
 # TODO: directories can currently be specified in any order, interleaved with
 #       regex-es, but these are collected and passed as 1st arguments to find.
 #       ^ see if we want to have sthg more complex.
+##
 function f() {
-  local locations=( )
-  local find_args=(
+  local -a locations=()
+  local -a find_args=(
       # Ignore all dotted '.xxx/' dirs.
       #   & CMakeFiles/ sub-directories.
-      \( -type d \( -name '.?*' -o -name "CMakeFiles" \) -prune \)
+      \( -type d \(    -name '.?*' -o -name "CMakeFiles" -o -name __pycache__
+                    -o -name build
+                 \) -prune
+      \)
     )
 
   # Directories are added to the list,
@@ -99,7 +148,10 @@ function f() {
   # Prepend the search locations.
   find_args=( "${locations[@]}" "${find_args[@]}" )
 
-  >&2 echo "~~> \`find ${find_args[@]}\`"
+  for loc in "${locations[@]}"; do
+    echo "# IN: ${loc@Q}"
+  done >&2
+  >&2 echo "# RUN: \`find ${find_args[@]@Q}\`"
 
   ( find "${find_args[@]}" ||
       (>&2 echo -e "\e[31;1;7m WARNING: \e[0;91m Bad \`find\` exit status: \e[97m$?\e[0m") && false
@@ -112,9 +164,12 @@ function f() {
   >&2 echo "\`~> find ${find_args[@]}"
 }
 
-# `w` : Quite locate file(s).
+
+##
+# `w` : Quick locate file(s).
 #
 # Locate files in arguments :
+#
 #   1) exists in/from the current directory ;
 #   2) search for an executable script in $PATH (`type -p ...`) ;
 #   3) if argument is less than 5 characters => output as-is ;
@@ -123,7 +178,8 @@ function f() {
 #
 # Note that the current dir. is always striped off (${arg#$PWD/}) when applicable.
 #
-# FABIC/2017-12-18
+# F/2017-12-18
+##
 function w() {
     local arg
     local fil
@@ -179,20 +235,8 @@ function w() {
     done
 }
 
-# Check that W is not already defined, just in case.
-if false; then
-    type_of_w="`type -t W`"
-    if [ ! -z "$type_of_w" ]; then
-        echo "~~> WARNING: ${BASH_SOURCE[0]}: \`W\` is already defined (is-a: $type_of_w)."
-        # Display bash function content.
-        if [ "$type_of_w" == "function" ]; then
-            type W | sed -e 's/^/             /'
-        fi
-    fi
-    unset type_of_w
-fi
 
-## `W` : Find source code files.
+## `W` : Find (and just list) source code files in directories
 #
 # Usage: W [<path> ...]
 #
@@ -206,10 +250,12 @@ fi
 # than just a list of locations to search for.
 #
 # Files are returned sorted by modification time (most recent first).
+#
+##
 function W() {
     local locations=( "$@" )
     # Extended-grep compatible reg. ex.
-    local regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|s|rs|js|py|php|html|rb)$"
+    local regex=".*\.(c|h|cc|hh|cpp|hpp|cxx|hxx|h\.inc|hxx\.inc|s|rs|js|py|php|html|rb|bash)$"
     local find_args=(
         "${locations[@]}"
              # Ignore all dotted '.xxx/' dirs.
@@ -226,18 +272,26 @@ function W() {
       # ^ NOTE: Pipes do shadow `find` exit status (we can't catch errors).
 }
 
+
 # Remove the 'v' shell alias that was set in `aliases/available/vim.aliases.bash`
 [ "`type -t v`" == "alias" ] && unalias v
 
 # `v` ~ quick vim open file(s) searched with `w`.
 function v() {
-    vim $(w "$@")
+  local _vim=""
+  type -p nvim && _vim="nvim" \
+    || type -p vim && _vim="vim" \
+    || type -p vi && _vim="vi"
+
+    "$_vim" "$(w "$@")"
 }
+
 
 # `V` (capital 'V') ~ Quick Vim open source code files, searched with `W`.
 function V() {
     vim $(W "$@")
 }
+
 
 # `ww [<count>|2]` : Lists the <count> (default 2) most recently modified files
 #                    of a Git subtree.
@@ -247,6 +301,7 @@ function ww() {
     xargs -0r ls -1t |
       head -n$count
 }
+
 
 # `vv` : Open G/Vim with the two most recently modified files of a Git subtree.
 #        (arguments are passed to Vim).
@@ -260,6 +315,7 @@ function vv() {
                  || vim -O `ww` "$@"
   fi
 }
+
 
 # `wi` : What is <thing>.
 function wi() {
@@ -291,6 +347,7 @@ proxy_unset() {
     done
 }
 
+
 # TODO: Function that used to emit a beep: edit so that it does that + sends some desktop notification or sthg.
 # F.2014-09-16
 function hey() {
@@ -303,21 +360,14 @@ function hey() {
 	done
 }
 
-# @see alias tree='find . -print | sed -e '\''s;[^/]*/;|____;g;s;____|; |;g'\'''
-function ftree()
-{
-	local -a in_dirs
-	in_dirs=( $1 ) ; shift
-	find "${in_dirs[@]}" -type d ${@:+-o \( "$@" \)} |
-		sort -df |
-		sed -e 's@[^/]*/@|__@g;s@__|@ |@g'
-		#cat
-	return $?
-}
 
+##
 # Ch.dir. to the directory specified as 1st argument, hence `cd -P ...`
+#
 # But: if target is a file, then ch.dir. into the containing directory.
+#
 # Also, if target is a symlink, then attempt to jump into the pointed to dir.
+##
 function cdp()
 {
     if [ -L "$1" ]; then # BEWARE! RECURSION!
@@ -329,6 +379,8 @@ function cdp()
     fi
 }
 
+
+## Process kill
 function pk()
 {
   if pgrep -af "$@" ; then
@@ -339,5 +391,6 @@ function pk()
     echo "Nope :/"
   fi
 }
+
 
 # vi: ft=sh et ts=2 sts=2 sw=2 number

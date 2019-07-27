@@ -248,9 +248,9 @@ export BASH_IT="$(cd `dirname "$(realpath "${BASH_SOURCE[0]}")"`/.. && pwd)"
 # Lock and Load a custom theme file.
 # Leave empty to disable theming.
 # location /.bash_it/themes/
-#export BASH_IT_THEME='fabi'
+export BASH_IT_THEME='custom/themes/powerline-fabic/powerline-fabic.theme.bash'
 #export BASH_IT_THEME='powerline-plain'
-export BASH_IT_THEME='redline'
+#export BASH_IT_THEME='redline'
 
 # (Advanced): Change this to the name of your remote repo if you
 # cloned bash-it with a remote other than origin such as `bash-it`.
