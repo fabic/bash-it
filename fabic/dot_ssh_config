@@ -16,3 +16,7 @@ Host matydiskstation mds matydiskstation.* matydiskstation.synology.me
   User fabic
   # Port 1984
 
+# RPi-3 OSMC
+Host osmc osmc.local osmc.home
+  User osmc
+

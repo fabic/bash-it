@@ -248,7 +248,8 @@ export BASH_IT="$(cd `dirname "$(realpath "${BASH_SOURCE[0]}")"`/.. && pwd)"
 # Lock and Load a custom theme file.
 # Leave empty to disable theming.
 # location /.bash_it/themes/
-export BASH_IT_THEME='custom/themes/powerline-fabic/powerline-fabic.theme.bash'
+#export BASH_IT_THEME='custom/themes/powerline-fabic/powerline-fabic.theme.bash'
+export BASH_IT_THEME='powerline-fabic'
 #export BASH_IT_THEME='powerline-plain'
 #export BASH_IT_THEME='redline'
 
@@ -480,7 +481,8 @@ if [ -x ~/.rvm/bin/rvm ]; then
 fi
 
 
-## Android SDKs ##
+## Android SDKs & Android Studio IDE ##
+#  (& Gradle)
 #
 # F/2019-06
 #
@@ -488,7 +490,7 @@ fi
 #       -> maybe just have a manual script to invoke when doing Android stuff.
 #
 ##
-if false && [[ -d $HOME/Android/Sdk ]];
+if true && [[ -d $HOME/Android/Sdk ]];
 then
   echox -e "Found your \e[32mAndroid\e[0m stuff at \`\e[33m$HOME/Android/Sdk/\e[0m\`"
 
@@ -525,8 +527,7 @@ then
   # we (just) want to find Gradle and add it to $PATH.
   if true; then
     AndroidStudioPaths=(
-        "$( ls -1 ~/.local/share/JetBrains/Toolbox/apps/AndroidStudio/ch-*/*/bin/studio.sh 2>/dev/null | sort -V | tail -n1 | xargs -n1 dirname | xargs -n1 dirname)"
-        "$( ls -1 /opt/android-studio/bin/studio.sh 2>/dev/null | sort -V | tail -n1 | xargs -n1 dirname | xargs -n1 dirname)"
+        "$( ls -1 /opt/android-studio/bin/studio.sh ~/.local/share/JetBrains/Toolbox/apps/AndroidStudio/ch-*/*/bin/studio.sh 2>/dev/null | sort -V | tail -n1 | xargs -n1 dirname 2>/dev/null | xargs -n1 dirname 2>/dev/null)"
     )
 
     if [[ ${#AndroidStudioPaths[@]} -lt 1 ]]; then
@@ -543,7 +544,7 @@ then
       AndroidStudioPath="${AndroidStudioPaths[0]}"
       echox "  \`~> picked: $AndroidStudioPath"
 
-      GradlePath="$( ls -1 "$AndroidStudioPath"/gradle/gradle-*/bin/gradle 2>/dev/null | xargs -n1 dirname)"
+      GradlePath="$( ls -1 "$AndroidStudioPath"/gradle/gradle-*/bin/gradle 2>/dev/null | xargs -n1 dirname 2>/dev/null)"
       if [[ ! -z "$GradlePath" ]]; then
         echox -e "  \`~> found \e[94mgradle\e[0m at $GradlePath"
         type -p gradle >/dev/null \
